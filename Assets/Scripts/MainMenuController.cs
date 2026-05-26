@@ -4,8 +4,8 @@ using UnityEngine.SceneManagement;
 public class MainMenuController : MonoBehaviour
 {
     [Header("Scene Names")]
-    [SerializeField] private string singlePlayerScene = "SinglePlayerGameplay";
-    [SerializeField] private string multiplayerScene = "MultiplayerGameplay";
+    // Changed these to target your character selection scene first
+    [SerializeField] private string characterSelectScene = "CharacterSelect"; 
     [SerializeField] private string optionsScene = "OptionsMenu";
     [SerializeField] private string creditsScene = "CreditsMenu";
 
@@ -17,14 +17,12 @@ public class MainMenuController : MonoBehaviour
 
     private void Start()
     {
-        // Ensures background music starts playing immediately on menu load
         if (backgroundMusicSource != null && !backgroundMusicSource.isPlaying)
         {
             backgroundMusicSource.Play();
         }
     }
 
-    // Public audio functions to be called by buttons
     public void PlayHoverSound()
     {
         if (sfxSource != null && hoverSound != null)
@@ -41,17 +39,20 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
-    // Scene Navigation functions
+    // Both singleplayer and multiplayer buttons now open Character Selection
+    // but save the intended game mode first!
     public void PlaySinglePlayer()
     {
         PlayClickSound();
-        SceneManager.LoadScene(singlePlayerScene);
+        PlayerPrefs.SetString("GameMode", "SinglePlayer");
+        SceneManager.LoadScene(characterSelectScene);
     }
 
     public void PlayMultiplayer()
     {
         PlayClickSound();
-        SceneManager.LoadScene(multiplayerScene);
+        PlayerPrefs.SetString("GameMode", "Multiplayer");
+        SceneManager.LoadScene(characterSelectScene);
     }
 
     public void OpenOptions()
