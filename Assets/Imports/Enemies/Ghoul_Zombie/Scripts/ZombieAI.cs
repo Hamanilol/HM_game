@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using Abdulrahman.PlayerSystem;
 
 namespace Abdulrahman.EnemySystem
 {
@@ -27,6 +28,8 @@ namespace Abdulrahman.EnemySystem
         private bool _isAttacking = false;
 
         private bool _isDead = false;
+        private PlayerHealth _playerHealth;
+
 
         private enum AIState { Idle, Chase, Attack, Dead }
         private AIState _currentState = AIState.Idle;
@@ -38,6 +41,7 @@ namespace Abdulrahman.EnemySystem
 
             if (player == null)
                 player = GameObject.FindWithTag("Player").transform;
+                _playerHealth = player.GetComponent<PlayerHealth>();
         }
 
         private void Update()
@@ -62,6 +66,15 @@ namespace Abdulrahman.EnemySystem
             else
                 _currentState = AIState.Idle;
         }
+        public void DealDamageToPlayer()
+        {
+            if (_playerHealth == null) return;
+
+            Vector3 knockbackDir = (player.position - transform.position).normalized;
+            knockbackDir.y = 0.3f;
+            _playerHealth.TakeDamage(5f, knockbackDir);
+        }
+        
 
         private void HandleState(float distance)
         {
@@ -86,11 +99,12 @@ namespace Abdulrahman.EnemySystem
                         _attackTimer = attackCooldown;
                         _isAttacking = true;
 
-                        if (distance <= attackRange1)
-                            _animator.SetTrigger("Attack1Trigger");
-                        else
-                            _animator.SetTrigger("Attack2Trigger");
-                    }
+                        int randomAttack = Random.Range(0, 2);
+                        if (randomAttack == 0)
+                        _animator.SetTrigger("Attack1Trigger");
+                    else
+                        _animator.SetTrigger("Attack2Trigger");
+                }
                     break;
             }
         }

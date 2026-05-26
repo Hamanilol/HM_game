@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ElmanGameDevTools.PlayerSystem
+namespace Abdulrahman.PlayerSystem
 {
     /// <summary>
     /// Advanced First Person Controller.
@@ -197,8 +197,11 @@ namespace ElmanGameDevTools.PlayerSystem
                 standingHeightMarker.transform.position = new Vector3(transform.position.x, transform.position.y + _markerHeightOffset, transform.position.z);
 
             controller.Move(moveInput * _currentMovementSpeed * Time.deltaTime);
-            _velocity.y += gravity * Time.deltaTime;
+            _velocity.y += gravity * Time.deltaTime; 
+            _velocity.x = Mathf.Lerp(_velocity.x, 0f, Time.deltaTime * 10f);
+            _velocity.z = Mathf.Lerp(_velocity.z, 0f, Time.deltaTime * 10f);
             controller.Move(_velocity * Time.deltaTime);
+         
         }
 
         private void HandleCrouchLogic()
@@ -259,6 +262,12 @@ namespace ElmanGameDevTools.PlayerSystem
             targetTiltTotal = Mathf.Clamp(targetTiltTotal, -maxTotalTilt, maxTotalTilt);
             _currentTilt = Mathf.Lerp(_currentTilt, targetTiltTotal, Time.deltaTime * tiltSmoothness);
         }
+        public void ApplyKnockback(Vector3 direction)
+    {
+    _velocity.x += direction.x * 25f;
+    _velocity.z += direction.z * 25f;
+    _velocity.y += direction.y * 25f;
+    }
 
         private void HandleFovChange()
         {

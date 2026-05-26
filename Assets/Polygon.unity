@@ -856,7 +856,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1083332412}
   - {fileID: 687224292}
   m_Father: {fileID: 1965706856}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4400,7 +4399,7 @@ GameObject:
   - component: {fileID: 1083332414}
   - component: {fileID: 1083332413}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: damageVigenette
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4419,7 +4418,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1735163101}
-  m_Father: {fileID: 195758770}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -7495,7 +7494,7 @@ GameObject:
   - component: {fileID: 1735163103}
   - component: {fileID: 1735163102}
   m_Layer: 5
-  m_Name: Image
+  m_Name: damageVignette
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9003,7 +9002,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Abdulrahman.PlayerSystem.PlayerHealth
   maxHealth: 100
-  damageVignette: {fileID: 0}
+  damageVignette: {fileID: 1735163102}
   vignetteMaxAlpha: 0.6
   vignetteFadeSpeed: 2
 --- !u!1 &1993357238
@@ -10516,3 +10515,4 @@ SceneRoots:
   - {fileID: 148637284}
   - {fileID: 401704316}
   - {fileID: 1402438802}
+  - {fileID: 1083332412}
