@@ -6,17 +6,18 @@ namespace Abdulrahman.EnemySystem
 {
     [RequireComponent(typeof(NavMeshAgent))]
     [RequireComponent(typeof(Animator))]
-    public class ZombieAI : MonoBehaviour
+    public abstract class BaseEnemyAI : MonoBehaviour
     {
         [Header("REFERENCES")]
         public Transform player;
-        private NavMeshAgent _agent;
-        private Animator _animator;
+        protected NavMeshAgent _agent;
+        protected Animator _animator;
+        protected PlayerHealth _playerHealth;
 
         [Header("DETECTION")]
         public float detectionRange = 15f;
-        public float attackRange1 = 2f;
-        public float attackRange2 = 4f;
+        public float attackRange = 2f;
+        public float attackRange2 = 0f; // 0 means unused
 
         [Header("MOVEMENT")]
         public float walkSpeed = 3.5f;
@@ -24,27 +25,28 @@ namespace Abdulrahman.EnemySystem
 
         [Header("ATTACK")]
         public float attackCooldown = 1.5f;
-        private float _attackTimer = 0f;
-        private bool _isAttacking = false;
+        public float damageAmount = 5f;
+        protected float _attackTimer = 0f;
+        protected bool _isAttacking = false;
 
-        private bool _isDead = false;
-        private PlayerHealth _playerHealth;
+        protected bool _isDead = false;
 
+        protected enum AIState { Idle, Chase, Attack, Dead }
+        protected AIState _currentState = AIState.Idle;
 
-        private enum AIState { Idle, Chase, Attack, Dead }
-        private AIState _currentState = AIState.Idle;
-
-        private void Start()
+        protected virtual void Start()
         {
             _agent = GetComponent<NavMeshAgent>();
             _animator = GetComponent<Animator>();
 
             if (player == null)
                 player = GameObject.FindWithTag("Player").transform;
+
+            if (player != null)
                 _playerHealth = player.GetComponent<PlayerHealth>();
         }
 
-        private void Update()
+        protected virtual void Update()
         {
             if (_isDead) return;
 
@@ -57,26 +59,19 @@ namespace Abdulrahman.EnemySystem
             _attackTimer -= Time.deltaTime;
         }
 
-        private void UpdateState(float distance)
+        protected virtual void UpdateState(float distance)
         {
-            if (distance <= attackRange1 || distance <= attackRange2)
+            bool inAttackRange = distance <= attackRange || (attackRange2 > 0f && distance <= attackRange2);
+
+            if (inAttackRange)
                 _currentState = AIState.Attack;
             else if (distance <= detectionRange)
                 _currentState = AIState.Chase;
             else
                 _currentState = AIState.Idle;
         }
-        public void DealDamageToPlayer()
-        {
-            if (_playerHealth == null) return;
 
-            Vector3 knockbackDir = (player.position - transform.position).normalized;
-            knockbackDir.y = 0.3f;
-            _playerHealth.TakeDamage(5f, knockbackDir);
-        }
-        
-
-        private void HandleState(float distance)
+        protected virtual void HandleState(float distance)
         {
             switch (_currentState)
             {
@@ -86,46 +81,35 @@ namespace Abdulrahman.EnemySystem
 
                 case AIState.Chase:
                     _agent.isStopped = false;
-                    _agent.speed = distance > attackRange2 * 2 ? runSpeed : walkSpeed;
+                    _agent.speed = distance > attackRange * 2 ? runSpeed : walkSpeed;
                     _agent.SetDestination(player.position);
                     break;
 
                 case AIState.Attack:
                     _agent.isStopped = true;
                     transform.LookAt(new Vector3(player.position.x, transform.position.y, player.position.z));
-
-                    if (_attackTimer <= 0f && !_isAttacking)
-                    {
-                        _attackTimer = attackCooldown;
-                        _isAttacking = true;
-
-                        int randomAttack = Random.Range(0, 2);
-                        if (randomAttack == 0)
-                        _animator.SetTrigger("Attack1Trigger");
-                    else
-                        _animator.SetTrigger("Attack2Trigger");
-                }
+                    HandleAttack(distance);
                     break;
             }
         }
 
-        private void UpdateAnimator()
+        protected abstract void HandleAttack(float distance);
+
+        protected virtual void UpdateAnimator()
         {
             _animator.SetFloat("Speed", _agent.velocity.magnitude, 0.1f, Time.deltaTime);
             _animator.SetBool("IsDead", _isDead);
-
-            if (_isAttacking)
-            {
-                AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-                bool attackDone = (stateInfo.IsName("Attack1") || stateInfo.IsName("Attack2"))
-                                  && stateInfo.normalizedTime >= 0.9f;
-
-                if (attackDone)
-                    _isAttacking = false;
-            }
         }
 
-        public void Die()
+        public virtual void DealDamageToPlayer()
+        {
+            if (_playerHealth == null) return;
+            Vector3 knockbackDir = (player.position - transform.position).normalized;
+            knockbackDir.y = 0.3f;
+            _playerHealth.TakeDamage(damageAmount, knockbackDir);
+        }
+
+        public virtual void Die()
         {
             _isDead = true;
             _currentState = AIState.Dead;
