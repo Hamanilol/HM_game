@@ -6,6 +6,13 @@ namespace Abdulrahman.EnemySystem
     {
         protected override void HandleAttack(float distance)
         {
+            if (_isAttacking)
+            {
+                AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+                if (!stateInfo.IsName("Attack1") && !stateInfo.IsName("Attack2"))
+                    _isAttacking = false;
+            }
+
             if (_attackTimer <= 0f && !_isAttacking)
             {
                 _attackTimer = attackCooldown;
@@ -16,16 +23,6 @@ namespace Abdulrahman.EnemySystem
                     _animator.SetTrigger("Attack1Trigger");
                 else
                     _animator.SetTrigger("Attack2Trigger");
-            }
-
-            if (_isAttacking)
-            {
-                AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-                bool attackDone = (stateInfo.IsName("Attack1") || stateInfo.IsName("Attack2"))
-                                  && stateInfo.normalizedTime >= 0.9f;
-
-                if (attackDone)
-                    _isAttacking = false;
             }
         }
     }

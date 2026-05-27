@@ -17,7 +17,7 @@ namespace Abdulrahman.EnemySystem
         [Header("DETECTION")]
         public float detectionRange = 15f;
         public float attackRange = 2f;
-        public float attackRange2 = 0f; // 0 means unused
+        public float attackRange2 = 0f;
 
         [Header("MOVEMENT")]
         public float walkSpeed = 3.5f;
