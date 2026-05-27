@@ -1932,14 +1932,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e97f64e74cd4e6b47b742db70270aee5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
-  singlePlayerScene: SinglePlayerGameplay
-  multiplayerScene: MultiplayerGameplay
+  characterSelectScene: CharacterSelect
   optionsScene: OptionsMenu
   creditsScene: CreditsMenu
   backgroundMusicSource: {fileID: 1882574532}
   sfxSource: {fileID: 1882574532}
   hoverSound: {fileID: 8300000, guid: 3059370436ccf3d4b85fbc681292159a, type: 3}
-  clickSound: {fileID: 0}
+  clickSound: {fileID: 8300000, guid: 084da08456093ab4a8d31ba8c51767a5, type: 3}
 --- !u!4 &1882574530
 Transform:
   m_ObjectHideFlags: 0
