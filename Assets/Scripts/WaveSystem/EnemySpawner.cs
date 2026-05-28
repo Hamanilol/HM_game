@@ -18,13 +18,13 @@ namespace Abdulrahman.WaveSystem
         // how many enemies total get spawned this wave
         public int totalEnemies = 20;
 
-        // we don't dump all of them at once — this controls how many come per batch
+        // we don't dump all of them at once this controls how many come per batch
         public int batchSize = 5;
 
-        // seconds between each batch. 300 = 5 minutes
+        // seconds between each batch. It's 5 minutes
         public float timeBetweenBatches = 300f;
 
-        // the max HP enemies spawn with — overrides the prefab default at runtime
+        // the max HP enemies spawn with overrides the prefab default at runtime
         public float enemyHealth = 100f;
 
         // multiplied onto the zombie's base walk/run speed
@@ -37,25 +37,21 @@ namespace Abdulrahman.WaveSystem
     }
 
     // The main spawner. Stick this on an empty GameObject in the scene.
-    // It handles all 5 waves automatically — you just set it up once and hit Play.
+    // It handles all 5 waves automatically you just set it up once and hit Play.
     public class EnemySpawner : MonoBehaviour
     {
         [Header("PREFAB")]
-        // drag the Ghoul prefab here from Assets/Imports/Enemies/Ghoul_Zombie/
+        // AbdulRahman drag the Ghoul prefab here from Assets/Imports/Enemies/Ghoul_Zombie/
         public GameObject enemyPrefab;
 
         [Header("SPAWN POINTS")]
         // these are the positions where enemies pop in.
-        // if you leave this empty it'll just use whatever child objects
-        // this GameObject has, which is probably the easier way to set it up
         public Transform[] spawnPoints;
 
         [Header("WAVE SETTINGS")]
-        // each element in this array is one wave.
-        // you can tweak all of this in the Inspector without touching code
         public WaveConfig[] waves = new WaveConfig[]
         {
-            // wave 1 — easy intro, 5 enemies every 5 minutes, 20 total
+            // wave 1 
             new WaveConfig
             {
                 waveName           = "Wave 1 – The First Sign",
@@ -67,7 +63,7 @@ namespace Abdulrahman.WaveSystem
                 damageMultiplier   = 1f
             },
 
-            // wave 2 — same batch size but faster and tankier
+            // wave 2
             new WaveConfig
             {
                 waveName           = "Wave 2 – Growing Darkness",
@@ -79,7 +75,7 @@ namespace Abdulrahman.WaveSystem
                 damageMultiplier   = 1.25f
             },
 
-            // wave 3 — batches get bigger now, pressure starts building
+            // wave 3
             new WaveConfig
             {
                 waveName           = "Wave 3 – The Swarm",
@@ -91,7 +87,7 @@ namespace Abdulrahman.WaveSystem
                 damageMultiplier   = 1.5f
             },
 
-            // wave 4 — things are getting rough here
+            // wave 4
             new WaveConfig
             {
                 waveName           = "Wave 4 – Relentless Hunt",
@@ -103,8 +99,7 @@ namespace Abdulrahman.WaveSystem
                 damageMultiplier   = 1.75f
             },
 
-            // wave 5 — final wave, basically a non-stop flood of enemies
-            // if you survive this you actually earned it
+            // wave 5
             new WaveConfig
             {
                 waveName           = "Wave 5 – FINAL ONSLAUGHT",
@@ -118,11 +113,10 @@ namespace Abdulrahman.WaveSystem
         };
 
         [Header("TIMING")]
-        // gives the player a few seconds at the start before anything happens
+        // gives the player a few seconds at the start
         public float initialDelay = 5f;
 
-        // breathing room between waves so the player isn't immediately
-        // swamped the second they kill the last enemy
+
         public float delayBetweenWaves = 10f;
 
         // these are read by WaveUIManager to show info on screen
@@ -134,7 +128,6 @@ namespace Abdulrahman.WaveSystem
         public WaveConfig CurrentWave        => (CurrentWaveIndex >= 0 && CurrentWaveIndex < waves.Length)
                                                 ? waves[CurrentWaveIndex] : null;
 
-        // other scripts can subscribe to these to know when waves start/end
         public event System.Action<int, WaveConfig> OnWaveStarted;
         public event System.Action<int>             OnWaveCompleted;
         public event System.Action                  OnAllWavesCompleted;
@@ -144,8 +137,7 @@ namespace Abdulrahman.WaveSystem
 
         private void Start()
         {
-            // if no spawn points were manually dragged in,
-            // just treat the children of this object as the spawn points
+
             if (spawnPoints == null || spawnPoints.Length == 0)
             {
                 spawnPoints = new Transform[transform.childCount];
@@ -168,8 +160,6 @@ namespace Abdulrahman.WaveSystem
             StartCoroutine(RunWaveCycle());
         }
 
-        // this runs the whole thing from start to finish.
-        // it's a coroutine so we can do "wait X seconds" without freezing the game
         private IEnumerator RunWaveCycle()
         {
             yield return new WaitForSeconds(initialDelay);
@@ -185,7 +175,7 @@ namespace Abdulrahman.WaveSystem
 
                 OnWaveStarted?.Invoke(i, cfg);
 
-                // release enemies in batches until we've sent them all out
+                // release enemies in batches until all is sent
                 int spawned = 0;
                 while (spawned < cfg.totalEnemies)
                 {
@@ -193,7 +183,6 @@ namespace Abdulrahman.WaveSystem
                     SpawnBatch(thisBatch, cfg);
                     spawned += thisBatch;
 
-                    // no point waiting after the very last batch
                     if (spawned < cfg.totalEnemies)
                         yield return new WaitForSeconds(cfg.timeBetweenBatches);
                 }
@@ -222,11 +211,9 @@ namespace Abdulrahman.WaveSystem
             {
                 Transform sp = spawnPoints[Random.Range(0, spawnPoints.Length)];
 
-                // tiny Y offset so the enemy doesn't clip into the floor on spawn
                 Vector3 pos = sp.position + Vector3.up * 0.1f;
                 GameObject enemy = Instantiate(enemyPrefab, pos, sp.rotation);
 
-                // override the prefab's default HP with whatever this wave sets
                 ZombieHealth health = enemy.GetComponent<ZombieHealth>();
                 if (health != null)
                     health.maxHealth = cfg.enemyHealth;
@@ -242,7 +229,7 @@ namespace Abdulrahman.WaveSystem
                 EnemiesAlive++;
                 _activeEnemies.Add(enemy);
 
-                // attach a death watcher so we get notified when this enemy dies
+                // death watcher so we get notified when this enemy dies
                 EnemyDeathNotifier notifier = enemy.AddComponent<EnemyDeathNotifier>();
                 notifier.Initialize(this, cfg.damageMultiplier);
             }
@@ -258,8 +245,6 @@ namespace Abdulrahman.WaveSystem
             }
         }
 
-        // draws little red spheres in the Scene view so you can see spawn positions
-        // without having to run the game
         private void OnDrawGizmos()
         {
             if (spawnPoints == null) return;
@@ -273,9 +258,7 @@ namespace Abdulrahman.WaveSystem
         }
     }
 
-    // this gets added at runtime to every enemy we spawn.
-    // its only job is to watch for death and tell the spawner about it.
-    // we do it this way so we don't have to modify the original ZombieHealth script
+    
     [DisallowMultipleComponent]
     public class EnemyDeathNotifier : MonoBehaviour
     {
@@ -299,15 +282,12 @@ namespace Abdulrahman.WaveSystem
             if (_health == null) return;
 
             // ZombieAI.Die() sets the "IsDead" animator bool,
-            // so we just check that every frame — not the cleanest solution
-            // but it works without touching the existing scripts
             Animator anim = GetComponent<Animator>();
             if (anim != null && anim.GetBool("IsDead"))
             {
                 _spawner.OnEnemyDied(gameObject);
 
-                // wait 5 seconds so the death animation has time to play,
-                // then remove the whole object from the scene
+                // wait 5 seconds so the death animation has time to play, then remove the whole object from the scene
                 Destroy(gameObject, 5f);
                 Destroy(this);
             }
