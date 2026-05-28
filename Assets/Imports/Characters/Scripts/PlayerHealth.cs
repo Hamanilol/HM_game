@@ -77,10 +77,24 @@ namespace Abdulrahman.PlayerSystem
             }
         }
 
+        [Header("UI")]
+        public GameObject deathScreen;
+
         private void Die()
         {
             Debug.Log("Player died");
-            // we'll add death logic later
+            
+            if (deathScreen != null)
+            {
+                deathScreen.SetActive(true);
+                
+                // Unlock cursor so they can click buttons (if any)
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                
+                // Stop time or other death logic
+                // Time.timeScale = 0f;
+            }
         }
-    }
+}
 }

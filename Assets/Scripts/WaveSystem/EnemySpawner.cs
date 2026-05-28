@@ -44,10 +44,12 @@ namespace Abdulrahman.WaveSystem
         [Header("PREFAB")]
         // AbdulRahman drag the Ghoul prefab here from Assets/Imports/Enemies/Ghoul_Zombie/
         public GameObject enemyPrefab;
+        public GameObject priestPrefab;
 
         [Header("SPAWN POINTS")]
         // these are the positions where enemies pop in.
         public Transform[] spawnPoints;
+        public Transform bossSpawnPoint;
 
         [Header("WAVE SETTINGS")]
         public WaveConfig[] waves = new WaveConfig[]
@@ -200,9 +202,46 @@ namespace Abdulrahman.WaveSystem
                     yield return new WaitForSeconds(delayBetweenWaves);
             }
 
+            // BOSS TRIGGER: Spawn Priest after the 5th wave (Final Boss)
+            if (priestPrefab != null)
+            {
+                Debug.Log("[EnemySpawner] All waves cleared. Spawning the Cursed Priest boss!");
+                SpawnBoss();
+                yield return new WaitUntil(() => EnemiesAlive == 0);
+                Debug.Log("[EnemySpawner] Cursed Priest defeated!");
+            }
+
             AllWavesComplete = true;
             OnAllWavesCompleted?.Invoke();
-            Debug.Log("[EnemySpawner] All 5 waves done. Player survived.");
+            Debug.Log("[EnemySpawner] All waves and challenges complete.");
+        }
+
+        private void SpawnBoss()
+        {
+            Transform sp = bossSpawnPoint != null ? bossSpawnPoint : spawnPoints[Random.Range(0, spawnPoints.Length)];
+            Vector3 pos = sp.position + Vector3.up * 0.1f;
+            GameObject priest = Instantiate(priestPrefab, pos, sp.rotation);
+
+            EnemyHealth health = priest.GetComponent<EnemyHealth>();
+            if (health != null)
+            {
+                health.maxHealth = 7000f;
+                // We need to re-init current health if it was set in Start
+                health._currentHealth = 7000f;
+            }
+
+            EnemiesAlive++;
+            _activeEnemies.Add(priest);
+
+            EnemyDeathNotifier notifier = priest.AddComponent<EnemyDeathNotifier>();
+            notifier.Initialize(this, 3.0f); // Boss hits hard
+
+            // UI Hook will go here
+            var bossBar = Object.FindAnyObjectByType<Abdulrahman.UISystem.BossHealthBar>(FindObjectsInactive.Include);
+            if (bossBar != null)
+            {
+                bossBar.InitializeBoss(health, "The cursed priest");
+            }
         }
 
         // spawns a group of enemies at random positions from our spawn point list
