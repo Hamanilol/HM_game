@@ -2,16 +2,16 @@ using UnityEngine;
 
 namespace Abdulrahman.EnemySystem
 {
-    public class ZombieHealth : MonoBehaviour
+    public class EnemyHealth : MonoBehaviour
     {
         public float maxHealth = 100f;
         private float _currentHealth;
-        private ZombieAI _zombieAI;
+        private BaseEnemyAI _enemyAI;
 
         private void Start()
         {
             _currentHealth = maxHealth;
-            _zombieAI = GetComponent<ZombieAI>();
+            _enemyAI = GetComponent<BaseEnemyAI>();
         }
 
         public void TakeDamage(float amount)
@@ -23,7 +23,7 @@ namespace Abdulrahman.EnemySystem
             if (_currentHealth <= 0)
             {
                 _currentHealth = 0;
-                _zombieAI.Die();
+                _enemyAI.Die();
             }
         }
     }

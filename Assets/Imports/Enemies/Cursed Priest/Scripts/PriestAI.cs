@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Abdulrahman.EnemySystem
 {
-    public class CursedPriestAI : BaseEnemyAI
+    public class PriestAI : BaseEnemyAI
     {
         [Header("PRIEST SETTINGS")]
         public float meleeRange = 2f;
@@ -31,10 +31,18 @@ namespace Abdulrahman.EnemySystem
                 _attackTimer = attackCooldown;
                 _isAttacking = true;
 
+                Debug.Log("Distance: " + distance + " meleeRange: " + meleeRange + " rangedRange: " + rangedRange);
+
                 if (distance <= meleeRange)
+                {
+                    Debug.Log("Triggering Melee");
                     _animator.SetTrigger("MeleeAttackTrigger");
+                }
                 else if (distance <= rangedRange)
+                {
+                    Debug.Log("Triggering Ranged");
                     _animator.SetTrigger("RangedAttackTrigger");
+                }
             }
         }
 
@@ -50,11 +58,17 @@ namespace Abdulrahman.EnemySystem
         public void ThrowProjectile()
         {
             if (projectilePrefab == null || projectileSpawnPoint == null) return;
-
+ 
             GameObject proj = Instantiate(projectilePrefab, projectileSpawnPoint.position, Quaternion.identity);
+            proj.SetActive(true);
             Projectile projectile = proj.GetComponent<Projectile>();
-            if (projectile != null)
+if (projectile != null)
                 projectile.Initialize(player);
+        }
+
+        private void OnDestroy()
+        {
+            Debug.Log("Priest was destroyed!");
         }
     }
 }

@@ -55,7 +55,7 @@ namespace Abdulrahman.EnemySystem
             UpdateState(distanceToPlayer);
             HandleState(distanceToPlayer);
             UpdateAnimator();
-
+            Debug.Log("State: " + _currentState + " Distance: " + distanceToPlayer);
             _attackTimer -= Time.deltaTime;
         }
 
