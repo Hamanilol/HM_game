@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Video;
 
 public class MainMenuController : MonoBehaviour
 {
@@ -7,7 +8,11 @@ public class MainMenuController : MonoBehaviour
 
     [SerializeField] private string characterSelectScene = "CharacterSelect";
     [SerializeField] private string optionsScene = "OptionsMenu";
-    [SerializeField] private string creditsScene = "CreditsMenu";
+
+    [Header("Credits Video")]
+
+    [SerializeField] private VideoPlayer videoPlayer;
+    [SerializeField] private GameObject mainMenu;
 
     [Header("Audio Setup")]
 
@@ -66,7 +71,7 @@ public class MainMenuController : MonoBehaviour
         PlayerPrefs.SetString("GameMode", "SinglePlayer");
 
         // DELAY LOAD
-        Invoke(nameof(LoadSinglePlayerScene), 1f);
+        Invoke(nameof(LoadSinglePlayerScene), 0.7f);
     }
 
     void LoadSinglePlayerScene()
@@ -87,7 +92,7 @@ public class MainMenuController : MonoBehaviour
         PlayerPrefs.SetString("GameMode", "Multiplayer");
 
         // DELAY LOAD
-        Invoke(nameof(LoadMultiplayerScene), 0.3f);
+        Invoke(nameof(LoadMultiplayerScene), 0.7f);
     }
 
     void LoadMultiplayerScene()
@@ -105,7 +110,7 @@ public class MainMenuController : MonoBehaviour
         PlayClickSound();
 
         // DELAY LOAD
-        Invoke(nameof(LoadOptionsScene), 0.3f);
+        Invoke(nameof(LoadOptionsScene), 0.7f);
     }
 
     void LoadOptionsScene()
@@ -122,13 +127,29 @@ public class MainMenuController : MonoBehaviour
         // PLAY SOUND
         PlayClickSound();
 
-        // DELAY LOAD
-        Invoke(nameof(LoadCreditsScene), 0.3f);
+        // DELAY VIDEO
+        Invoke(nameof(PlayCreditsVideo), 0.7f);
     }
 
-    void LoadCreditsScene()
+    void PlayCreditsVideo()
     {
-        SceneManager.LoadScene(creditsScene);
+        // HIDE MENU
+        mainMenu.SetActive(false);
+
+        // PLAY VIDEO
+        videoPlayer.Play();
+
+        // WAIT FOR VIDEO TO END
+        videoPlayer.loopPointReached += EndCreditsVideo;
+    }
+
+    void EndCreditsVideo(VideoPlayer vp)
+    {
+        // STOP VIDEO
+        videoPlayer.Stop();
+
+        // SHOW MENU AGAIN
+        mainMenu.SetActive(true);
     }
 
     // =========================
@@ -141,7 +162,7 @@ public class MainMenuController : MonoBehaviour
         PlayClickSound();
 
         // DELAY QUIT
-        Invoke(nameof(QuitAfterSound), 0.3f);
+        Invoke(nameof(QuitAfterSound), 0.7f);
     }
 
     void QuitAfterSound()

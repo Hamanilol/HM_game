@@ -678,6 +678,9 @@ PlayerSettings:
   cloudServicesEnabled:
     Purchasing: 0
     Unity Ads: 0
+  cloudServicesEnabled:
+    Purchasing: 0
+    Unity Ads: 0
   luminIcon:
     m_Name: 
     m_ModelFolderPath: 

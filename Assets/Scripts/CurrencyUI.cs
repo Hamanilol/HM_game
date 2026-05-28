@@ -3,31 +3,175 @@ using UnityEngine;
 
 public class CurrencyUI : MonoBehaviour
 {
+    [Header("UI")]
     public TextMeshProUGUI moneyText;
+    public TextMeshProUGUI eventText;
 
-    private int money = 0;
+    [Header("Money Settings")]
+    public int startingMoney = 0;
+
+    [Header("Bonus Event")]
+    public int ghostBonusMin = 100;
+    public int ghostBonusMax = 300;
+    public float ghostEventChance = 0.2f;
+
+    private int money;
+    private int comboMultiplier = 1;
+
+    // =========================
+    // START
+    // =========================
 
     void Start()
     {
+        // LOAD SAVED MONEY
+        money = PlayerPrefs.GetInt("PlayerMoney", startingMoney);
+
         UpdateUI();
+
+        if (eventText != null)
+        {
+            eventText.gameObject.SetActive(false);
+        }
     }
+
+    // =========================
+    // ADD MONEY
+    // =========================
 
     public void AddMoney(int amount)
     {
-        money += amount;
+        int finalAmount = amount * comboMultiplier;
+
+        money += finalAmount;
+
+        // RANDOM GHOST BONUS EVENT
+        float randomChance = Random.Range(0f, 1f);
+
+        if (randomChance <= ghostEventChance)
+        {
+            int bonus = Random.Range(ghostBonusMin, ghostBonusMax + 1);
+
+            money += bonus;
+
+            ShowEvent("GHOST TREASURE FOUND! +$" + bonus);
+        }
+
+        SaveMoney();
         UpdateUI();
     }
+
+    // =========================
+    // REMOVE MONEY
+    // =========================
+
+    public void RemoveMoney(int amount)
+    {
+        money -= amount;
+
+        if (money < 0)
+        {
+            money = 0;
+        }
+
+        SaveMoney();
+        UpdateUI();
+    }
+
+    // =========================
+    // MULTIPLIER
+    // =========================
+
+    public void SetMultiplier(int multiplier)
+    {
+        comboMultiplier = multiplier;
+
+        ShowEvent("2X MONEY BONUS!");
+    }
+
+    public void ResetMultiplier()
+    {
+        comboMultiplier = 1;
+    }
+
+    // =========================
+    // SAVE MONEY
+    // =========================
+
+    void SaveMoney()
+    {
+        PlayerPrefs.SetInt("PlayerMoney", money);
+        PlayerPrefs.Save();
+    }
+
+    // =========================
+    // UPDATE UI
+    // =========================
 
     void UpdateUI()
     {
         moneyText.text = "$" + money;
     }
 
+    // =========================
+    // EVENT POPUP
+    // =========================
+
+    void ShowEvent(string message)
+    {
+        if (eventText == null)
+            return;
+
+        eventText.gameObject.SetActive(true);
+
+        eventText.text = message;
+
+        CancelInvoke(nameof(HideEvent));
+
+        Invoke(nameof(HideEvent), 2f);
+    }
+
+    void HideEvent()
+    {
+        eventText.gameObject.SetActive(false);
+    }
+
+    // =========================
+    // TESTING
+    // =========================
+
     void Update()
     {
+        // PRESS SPACE = NORMAL MONEY
         if (Input.GetKeyDown(KeyCode.Space))
         {
             AddMoney(50);
+        }
+
+        // PRESS G = BIG GHOST REWARD
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            AddMoney(250);
+        }
+
+        // PRESS H = LOSE MONEY
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            RemoveMoney(100);
+        }
+
+        // PRESS J = 2X BONUS
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            SetMultiplier(2);
+        }
+
+        // PRESS K = RESET BONUS
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            ResetMultiplier();
+
+            ShowEvent("BONUS ENDED");
         }
     }
 }
