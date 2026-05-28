@@ -11,5 +11,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Horror_Mansion/Scenes/MainMenu.unity
     guid: 10ce4fdd637ca1e47a7b27235f107536
-  m_configObjects: {}
+  - enabled: 1
+    path: Assets/Horror_Mansion/Scenes/CurrencyUI.unity
+    guid: b582071b9454c984a83709a7e2394866
+  - enabled: 1
+    path: Assets/Horror_Mansion/Scenes/HM_Demo.unity
+    guid: d88907bee68f18c4797f922806cd81ff
+  m_configObjects:
+    com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
   m_UseUCBPForAssetBundles: 0

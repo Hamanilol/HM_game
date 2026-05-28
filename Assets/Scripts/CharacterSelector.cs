@@ -102,7 +102,7 @@ public class CharacterSelector : MonoBehaviour
         PlayerPrefs.SetInt("SelectedCharacter", currentCharacterIndex);
 
         // WAIT BEFORE LOADING
-        Invoke(nameof(LoadGameScene), 1f);
+        Invoke(nameof(LoadGameScene), 0.7f);
     }
 
     // =========================
@@ -111,18 +111,8 @@ public class CharacterSelector : MonoBehaviour
 
     void LoadGameScene()
     {
-        // GET GAME MODE
-        string gameMode = PlayerPrefs.GetString("GameMode", "SinglePlayer");
-
-        // LOAD CORRECT SCENE
-        if (gameMode == "Multiplayer")
-        {
-            SceneManager.LoadScene("MultiplayerGameplay");
-        }
-        else
-        {
-            SceneManager.LoadScene("SinglePlayerGameplay");
-        }
+        // LOAD DEMO SCENE
+        SceneManager.LoadScene("HM_Demo");
     }
 
     // =========================
@@ -135,7 +125,7 @@ public class CharacterSelector : MonoBehaviour
         audioSource.PlayOneShot(backSound);
 
         // WAIT BEFORE LOADING MENU
-        Invoke(nameof(LoadMenuScene), 0.3f);
+        Invoke(nameof(LoadMenuScene), 0.7f);
     }
 
     // =========================
