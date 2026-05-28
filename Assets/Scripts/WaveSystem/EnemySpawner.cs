@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Abdulrahman.EnemySystem;
 
+
 // I put everything in its own namespace to keep it separate from the enemy/player stuff
 namespace Abdulrahman.WaveSystem
 {
@@ -214,7 +215,7 @@ namespace Abdulrahman.WaveSystem
                 Vector3 pos = sp.position + Vector3.up * 0.1f;
                 GameObject enemy = Instantiate(enemyPrefab, pos, sp.rotation);
 
-                ZombieHealth health = enemy.GetComponent<ZombieHealth>();
+                EnemyHealth health = enemy.GetComponent<EnemyHealth>();
                 if (health != null)
                     health.maxHealth = cfg.enemyHealth;
 
@@ -263,7 +264,7 @@ namespace Abdulrahman.WaveSystem
     public class EnemyDeathNotifier : MonoBehaviour
     {
         private EnemySpawner _spawner;
-        private ZombieHealth _health;
+        private EnemyHealth _health;
         private float        _damageMultiplier;
 
         public void Initialize(EnemySpawner spawner, float damageMultiplier)
@@ -274,7 +275,7 @@ namespace Abdulrahman.WaveSystem
 
         private void Start()
         {
-            _health = GetComponent<ZombieHealth>();
+            _health = GetComponent<EnemyHealth>();
         }
 
         private void Update()
