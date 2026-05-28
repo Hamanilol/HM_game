@@ -56,11 +56,19 @@ namespace Abdulrahman.PlayerSystem
         {
             if (_currentHealth <= 0) return;
 
+            Debug.Log($"[PlayerHealth] Taking {amount} damage. Current Health: {_currentHealth - amount}");
             _currentHealth -= amount;
             _targetAlpha = vignetteMaxAlpha;
 
             if (_playerController != null)
+            {
+                Debug.Log($"[PlayerHealth] Applying knockback: {knockbackDirection}");
                 _playerController.ApplyKnockback(knockbackDirection);
+            }
+            else
+            {
+                Debug.LogWarning("[PlayerHealth] _playerController is null, cannot apply knockback!");
+            }
 
             if (_currentHealth <= 0)
             {

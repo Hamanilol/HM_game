@@ -22,8 +22,13 @@ namespace Abdulrahman.EnemySystem
             if (_isAttacking)
             {
                 AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-                bool inAttack = stateInfo.IsName("MeleeAttack") || stateInfo.IsName("RangedAttack");
-                if (!inAttack) _isAttacking = false;
+                // Correctly check for RA (Ranged Attack) and MeleeAttack state names
+                bool inAttack = stateInfo.IsName("MeleeAttack") || stateInfo.IsName("RA");
+                if (!inAttack) 
+                {
+                    _isAttacking = false;
+                    Debug.Log("[PriestAI] Attack finished, returning to movement.");
+                }
             }
 
             if (_attackTimer <= 0f && !_isAttacking)
@@ -31,17 +36,19 @@ namespace Abdulrahman.EnemySystem
                 _attackTimer = attackCooldown;
                 _isAttacking = true;
 
-                Debug.Log("Distance: " + distance + " meleeRange: " + meleeRange + " rangedRange: " + rangedRange);
-
                 if (distance <= meleeRange)
                 {
-                    Debug.Log("Triggering Melee");
+                    Debug.Log("[PriestAI] Triggering Melee Attack (Distance: " + distance + ")");
                     _animator.SetTrigger("MeleeAttackTrigger");
                 }
                 else if (distance <= rangedRange)
                 {
-                    Debug.Log("Triggering Ranged");
+                    Debug.Log("[PriestAI] Triggering Ranged Attack (Distance: " + distance + ")");
                     _animator.SetTrigger("RangedAttackTrigger");
+                }
+                else
+                {
+                    _isAttacking = false;
                 }
             }
         }

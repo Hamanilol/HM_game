@@ -263,11 +263,11 @@ namespace Abdulrahman.PlayerSystem
             _currentTilt = Mathf.Lerp(_currentTilt, targetTiltTotal, Time.deltaTime * tiltSmoothness);
         }
         public void ApplyKnockback(Vector3 direction)
-    {
-    _velocity.x += direction.x * 25f;
-    _velocity.z += direction.z * 25f;
-    _velocity.y += direction.y * 25f;
-    }
+        {
+            _velocity.x += direction.x * 40f;
+            _velocity.z += direction.z * 40f;
+            _velocity.y += direction.y * 40f;
+        }
 
         private void HandleFovChange()
         {

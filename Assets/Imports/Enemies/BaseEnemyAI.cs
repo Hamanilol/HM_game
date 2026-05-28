@@ -26,8 +26,9 @@ namespace Abdulrahman.EnemySystem
         [Header("ATTACK")]
         public float attackCooldown = 1.5f;
         public float damageAmount = 5f;
+        public float knockbackForce = 15f;
         protected float _attackTimer = 0f;
-        protected bool _isAttacking = false;
+protected bool _isAttacking = false;
 
         protected bool _isDead = false;
 
@@ -40,10 +41,24 @@ namespace Abdulrahman.EnemySystem
             _animator = GetComponent<Animator>();
 
             if (player == null)
-                player = GameObject.FindWithTag("Player").transform;
+            {
+                var healths = Object.FindObjectsByType<PlayerHealth>(FindObjectsSortMode.None);
+                if (healths.Length > 0)
+                {
+                    player = healths[0].transform;
+                }
+                else
+                {
+                    GameObject pObj = GameObject.FindWithTag("Player");
+                    if (pObj != null) player = pObj.transform;
+                }
+            }
 
             if (player != null)
                 _playerHealth = player.GetComponent<PlayerHealth>();
+            
+            if (_playerHealth == null && player != null)
+                _playerHealth = player.GetComponentInParent<PlayerHealth>();
         }
 
         protected virtual void Update()
@@ -103,9 +118,24 @@ namespace Abdulrahman.EnemySystem
 
         public virtual void DealDamageToPlayer()
         {
-            if (_playerHealth == null) return;
-            Vector3 knockbackDir = (player.position - transform.position).normalized;
-            knockbackDir.y = 0.3f;
+            if (_playerHealth == null)
+            {
+                Debug.LogWarning("[BaseEnemyAI] Cannot deal damage: _playerHealth is null!");
+                return;
+            }
+            
+            Debug.Log($"[BaseEnemyAI] Dealing {damageAmount} damage to player.");
+            
+            // Calculate direction away from enemy
+            Vector3 knockbackDir = (player.position - transform.position);
+            knockbackDir.y = 0; // Flatten for horizontal direction
+            if (knockbackDir.magnitude < 0.1f) knockbackDir = transform.forward; // Fallback
+            
+            knockbackDir.Normalize();
+            knockbackDir.y = 0.5f; // Add vertical lift
+            
+            knockbackDir *= (knockbackForce / 10f);
+            
             _playerHealth.TakeDamage(damageAmount, knockbackDir);
         }
 
