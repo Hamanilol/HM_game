@@ -26,7 +26,8 @@ namespace Abdulrahman.EnemySystem
         [Header("ATTACK")]
         public float attackCooldown = 1.5f;
         public float damageAmount = 5f;
-        public float knockbackForce = 15f;
+        public float knockbackForce = 5f;
+        public float verticalKnockback = 0.5f;
         protected float _attackTimer = 0f;
 protected bool _isAttacking = false;
 

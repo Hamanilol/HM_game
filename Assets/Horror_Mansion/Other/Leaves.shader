@@ -51,7 +51,7 @@ Shader "AE/Leaves"
 		HLSLINCLUDE
 		#pragma target 3.0
 
-		#pragma prefer_hlslcc gles
+
 		#pragma exclude_renderers d3d11_9x 
 
 		#ifndef ASE_TESS_FUNCS

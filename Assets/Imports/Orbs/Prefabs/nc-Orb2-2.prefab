@@ -9799,7 +9799,7 @@ MonoBehaviour:
   speed: 12
   damage: 10
   knockbackForce: 15
-  verticalKnockback: 8
+  verticalKnockback: 2
   lifetime: 5
   hitEffectPrefab: {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
 --- !u!1 &3934015306746896996

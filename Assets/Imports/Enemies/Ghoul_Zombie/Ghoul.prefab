@@ -1030,6 +1030,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Abdulrahman.EnemySystem.ZombieHealth
   maxHealth: 100
+  _currentHealth: 0
 --- !u!114 &9203514339311988100
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1050,6 +1051,8 @@ MonoBehaviour:
   runSpeed: 7
   attackCooldown: 1.5
   damageAmount: 5
+  knockbackForce: 5
+  verticalKnockback: 0
 --- !u!111 &4666602099538847258
 Animation:
   m_ObjectHideFlags: 0

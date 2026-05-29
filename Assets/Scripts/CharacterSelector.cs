@@ -26,16 +26,21 @@ public class CharacterSelector : MonoBehaviour
 
     void Start()
     {
+        Debug.Log("[CharacterSelector] Start. Character count: " + characters.Length);
         // TURN OFF ALL CHARACTERS
         for (int i = 0; i < characters.Length; i++)
         {
-            characters[i].SetActive(false);
+            if (characters[i] != null)
+            {
+                characters[i].SetActive(false);
+            }
         }
 
         // SHOW FIRST CHARACTER
         if (characters.Length > 0)
         {
             characters[currentCharacterIndex].SetActive(true);
+            Debug.Log("[CharacterSelector] Initialized with: " + characters[currentCharacterIndex].name);
         }
     }
 
@@ -46,10 +51,12 @@ public class CharacterSelector : MonoBehaviour
     public void NextCharacter()
     {
         // PLAY SOUND
-        audioSource.PlayOneShot(clickSound);
+        if (audioSource != null && clickSound != null)
+            audioSource.PlayOneShot(clickSound);
 
         // HIDE CURRENT
-        characters[currentCharacterIndex].SetActive(false);
+        if (characters[currentCharacterIndex] != null)
+            characters[currentCharacterIndex].SetActive(false);
 
         // MOVE TO NEXT
         currentCharacterIndex++;
@@ -61,7 +68,11 @@ public class CharacterSelector : MonoBehaviour
         }
 
         // SHOW NEW CHARACTER
-        characters[currentCharacterIndex].SetActive(true);
+        if (characters[currentCharacterIndex] != null)
+        {
+            characters[currentCharacterIndex].SetActive(true);
+            Debug.Log("[CharacterSelector] Switched to Next: " + characters[currentCharacterIndex].name + " (Index " + currentCharacterIndex + ")");
+        }
     }
 
     // =========================
@@ -71,10 +82,12 @@ public class CharacterSelector : MonoBehaviour
     public void PreviousCharacter()
     {
         // PLAY SOUND
-        audioSource.PlayOneShot(clickSound);
+        if (audioSource != null && clickSound != null)
+            audioSource.PlayOneShot(clickSound);
 
         // HIDE CURRENT
-        characters[currentCharacterIndex].SetActive(false);
+        if (characters[currentCharacterIndex] != null)
+            characters[currentCharacterIndex].SetActive(false);
 
         // MOVE BACK
         currentCharacterIndex--;
@@ -86,7 +99,11 @@ public class CharacterSelector : MonoBehaviour
         }
 
         // SHOW NEW CHARACTER
-        characters[currentCharacterIndex].SetActive(true);
+        if (characters[currentCharacterIndex] != null)
+        {
+            characters[currentCharacterIndex].SetActive(true);
+            Debug.Log("[CharacterSelector] Switched to Previous: " + characters[currentCharacterIndex].name + " (Index " + currentCharacterIndex + ")");
+        }
     }
 
     // =========================
@@ -100,10 +117,11 @@ public class CharacterSelector : MonoBehaviour
 
         // SAVE CHARACTER
         PlayerPrefs.SetInt("SelectedCharacter", currentCharacterIndex);
+        PlayerPrefs.Save();
 
         // WAIT BEFORE LOADING
         Invoke(nameof(LoadGameScene), 0.7f);
-    }
+}
 
     // =========================
     // LOAD GAME SCENE

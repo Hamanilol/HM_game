@@ -671,6 +671,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelector
   characters:
+  - {fileID: 1457961351}
   - {fileID: 2094323446}
   audioSource: {fileID: 420871067}
   clickSound: {fileID: 8300000, guid: 084da08456093ab4a8d31ba8c51767a5, type: 3}
@@ -782,15 +783,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 76315a4b48353b94d8c8c47d9c8c25af, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 76315a4b48353b94d8c8c47d9c8c25af, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.8
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 76315a4b48353b94d8c8c47d9c8c25af, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 76315a4b48353b94d8c8c47d9c8c25af, type: 3}
       propertyPath: m_LocalRotation.w
@@ -827,6 +828,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 76315a4b48353b94d8c8c47d9c8c25af, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 76315a4b48353b94d8c8c47d9c8c25af, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: 76315a4b48353b94d8c8c47d9c8c25af, type: 3}
       propertyPath: m_Controller
@@ -995,8 +1000,10 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -1093,7 +1100,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.1, g: 0.1, b: 0.1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
   m_BuildTextureStacks: []
@@ -2084,15 +2091,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 242e3eeb0f67f4e42b42aefd4d6383af, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -0.7
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 242e3eeb0f67f4e42b42aefd4d6383af, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.8
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 242e3eeb0f67f4e42b42aefd4d6383af, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 242e3eeb0f67f4e42b42aefd4d6383af, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2133,10 +2140,6 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 242e3eeb0f67f4e42b42aefd4d6383af, type: 3}
       propertyPath: m_Name
       value: Ch31_nonPBR (1)
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 242e3eeb0f67f4e42b42aefd4d6383af, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2696,7 +2699,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1457961351}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 22100000, guid: cf1cbf76a403f3c4fab0a2311ed95ff3, type: 2}
   m_CullingMode: 0
