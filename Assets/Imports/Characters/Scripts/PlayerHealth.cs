@@ -5,9 +5,14 @@ namespace Abdulrahman.PlayerSystem
 {
     public class PlayerHealth : MonoBehaviour
     {
+        public event System.Action<float, float> OnHealthChanged;
+
         [Header("HEALTH")]
         public float maxHealth = 100f;
         private float _currentHealth;
+
+        public float CurrentHealth => _currentHealth;
+        public float MaxHealth => maxHealth;
 
         [Header("DAMAGE VIGNETTE")]
         public Image damageVignette;
@@ -28,6 +33,8 @@ namespace Abdulrahman.PlayerSystem
                 c.a = 0f;
                 damageVignette.color = c;
             }
+
+            OnHealthChanged?.Invoke(_currentHealth, maxHealth);
         }
 
         private void Update()
@@ -59,6 +66,8 @@ namespace Abdulrahman.PlayerSystem
             Debug.Log($"[PlayerHealth] Taking {amount} damage. Current Health: {_currentHealth - amount}");
             _currentHealth -= amount;
             _targetAlpha = vignetteMaxAlpha;
+
+            OnHealthChanged?.Invoke(_currentHealth, maxHealth);
 
             if (_playerController != null)
             {

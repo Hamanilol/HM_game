@@ -67,6 +67,13 @@ namespace Abdulrahman.PlayerSystem
         public float runFov = 70f;
         public float fovChangeSpeed = 8f;
 
+        [Header("STAMINA SETTINGS")]
+        public float maxStamina = 100f;
+        public float staminaDepletionRate = 20f;
+        public float staminaRegenRate = 15f;
+        private float _currentStamina;
+        private bool _canSprint = true;
+
         [Header("STANDING DETECTION & GROUND CHECK")]
         public GameObject standingHeightMarker;
         public float standingCheckRadius = 0.2f;
@@ -94,10 +101,12 @@ namespace Abdulrahman.PlayerSystem
         public bool IsGrounded => _isGrounded;
         public bool IsCrouching => _isCrouching;
         public MovementState CurrentState => _currentMovementState;
+        public float CurrentStamina => _currentStamina;
+        public float MaxStamina => maxStamina;
 
         private void Start()
         {
-            
+            _currentStamina = maxStamina;
             if (controller == null) controller = GetComponent<CharacterController>();
             Cursor.lockState = CursorLockMode.Locked;
             _originalHeight = controller.height;
@@ -128,6 +137,29 @@ namespace Abdulrahman.PlayerSystem
 
             if (enableHeadBob) HandleHeadBob();
             if (bodyAnimator != null) UpdateAnimator();
+            HandleStamina();
+        }
+
+        private void HandleStamina()
+        {
+            if (_currentMovementState == MovementState.Running && (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0))
+            {
+                _currentStamina -= staminaDepletionRate * Time.deltaTime;
+                if (_currentStamina <= 0)
+                {
+                    _currentStamina = 0;
+                    _canSprint = false;
+                }
+            }
+            else
+            {
+                _currentStamina += staminaRegenRate * Time.deltaTime;
+                if (_currentStamina >= maxStamina)
+                {
+                    _currentStamina = maxStamina;
+                    _canSprint = true;
+                }
+            }
         }
    private void UpdateAnimator()
 {
@@ -159,7 +191,7 @@ namespace Abdulrahman.PlayerSystem
 
         private void UpdateMovementState()
         {
-            bool wantsToRun = Input.GetKey(runKey) && Input.GetAxis("Vertical") > 0.1f;
+            bool wantsToRun = Input.GetKey(runKey) && Input.GetAxis("Vertical") > 0.1f && _currentStamina > 0 && _canSprint;
 
             if (!_isGrounded)
             {
