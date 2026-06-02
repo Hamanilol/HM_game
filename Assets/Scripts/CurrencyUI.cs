@@ -24,8 +24,9 @@ public class CurrencyUI : MonoBehaviour
 
     void Start()
     {
-        // LOAD SAVED MONEY
-        money = PlayerPrefs.GetInt("PlayerMoney", startingMoney);
+        // RESET MONEY ON SCENE LOAD
+        money = startingMoney;
+        SaveMoney(); // Reset the saved value as well if needed
 
         UpdateUI();
 
