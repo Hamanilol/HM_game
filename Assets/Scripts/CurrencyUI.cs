@@ -110,7 +110,7 @@ public class CurrencyUI : MonoBehaviour
 
     void UpdateUI()
     {
-        moneyText.text = "$" + money;
+        moneyText.text = money.ToString();
     }
 
     // =========================
