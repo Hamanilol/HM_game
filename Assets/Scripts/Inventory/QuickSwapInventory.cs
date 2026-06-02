@@ -6,8 +6,17 @@ namespace Abdulrahman.InventorySystem
     public class QuickSwapInventory : MonoBehaviour
     {
         [Header("Settings")]
+        [Header("Animation")]
         public Transform hand;                // Parent for all held items (child of camera)
         public int slotCount = 5;
+        public Animator characterAnimator;
+
+        public enum WeaponCategory
+        {
+            Unarmed = 0,
+            Pistol = 1,
+            LongGun = 2
+        }
 
         [Header("Items")]
         public List<GameObject> itemPrefabs = new List<GameObject>();
@@ -85,6 +94,29 @@ namespace Abdulrahman.InventorySystem
                 // Try to get the weapon component
                 _currentWeapon = _currentItemInstance.GetComponent<BaseWeapon>();
             }
+            if (_currentWeapon != null)
+                UpdateWeaponPose();
+            else
+                characterAnimator?.SetInteger("WeaponPose", 0);
+        }
+
+        private void UpdateWeaponPose()
+        {
+            if (characterAnimator == null) return;
+            WeaponCategory category = GetWeaponCategory();
+            characterAnimator.SetInteger("WeaponPose", (int)category);
+        }
+
+        private WeaponCategory GetWeaponCategory()
+        {
+            if (_currentWeapon == null) return WeaponCategory.Unarmed;
+
+            // Pistols and SMGs -> Pistol pose
+            if (_currentWeapon is Pistol || _currentWeapon is SMG)
+                return WeaponCategory.Pistol;
+
+            // Rifles, shotguns, burst rifles -> LongGun pose
+            return WeaponCategory.LongGun;
         }
 
         // ----- Weapon Input -----
