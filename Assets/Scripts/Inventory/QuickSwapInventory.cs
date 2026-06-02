@@ -6,19 +6,24 @@ namespace Abdulrahman.InventorySystem
     public class QuickSwapInventory : MonoBehaviour
     {
         [Header("Settings")]
-        public Transform hand;
+        public Transform hand;                // Parent for all held items (child of camera)
         public int slotCount = 5;
-        
+
         [Header("Items")]
         public List<GameObject> itemPrefabs = new List<GameObject>();
-        
+
+        // Runtime
         private int _currentSlotIndex = -1;
         private GameObject _currentItemInstance;
+        private BaseWeapon _currentWeapon;    // The weapon component on the current item
         private List<GameObject> _slots = new List<GameObject>();
+
+        // Weapon input state
+        private bool _fireButtonHeld;
+        private bool _aimButtonHeld;
 
         private void Start()
         {
-            // Initialize slots
             for (int i = 0; i < slotCount; i++)
             {
                 if (i < itemPrefabs.Count)
@@ -26,43 +31,34 @@ namespace Abdulrahman.InventorySystem
                 else
                     _slots.Add(null);
             }
-
-            // Default to first slot if possible
             SwapToSlot(0);
         }
 
         private void Update()
         {
-            HandleInput();
-            HandleScroll();
+            HandleSlotInput();
+            HandleWeaponInput();
         }
 
-        private void HandleInput()
+        // ----- Slot Switching (unchanged logic) -----
+        private void HandleSlotInput()
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1)) SwapToSlot(0);
-            if (Input.GetKeyDown(KeyCode.Alpha2)) SwapToSlot(1);
-            if (Input.GetKeyDown(KeyCode.Alpha3)) SwapToSlot(2);
-            if (Input.GetKeyDown(KeyCode.Alpha4)) SwapToSlot(3);
-            if (Input.GetKeyDown(KeyCode.Alpha5)) SwapToSlot(4);
-            if (Input.GetKeyDown(KeyCode.Alpha6)) SwapToSlot(5);
-            if (Input.GetKeyDown(KeyCode.Alpha7)) SwapToSlot(6);
-            if (Input.GetKeyDown(KeyCode.Alpha8)) SwapToSlot(7);
-            if (Input.GetKeyDown(KeyCode.Alpha9)) SwapToSlot(8);
-        }
+            // Number keys 1‑9
+            for (int i = 0; i < slotCount && i < 9; i++)
+            {
+                if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+                {
+                    SwapToSlot(i);
+                    break;
+                }
+            }
 
-        private void HandleScroll()
-        {
+            // Scroll wheel
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             if (scroll > 0f)
-            {
-                int next = (_currentSlotIndex + 1) % slotCount;
-                SwapToSlot(next);
-            }
+                SwapToSlot((_currentSlotIndex + 1) % slotCount);
             else if (scroll < 0f)
-            {
-                int prev = (_currentSlotIndex - 1 + slotCount) % slotCount;
-                SwapToSlot(prev);
-            }
+                SwapToSlot((_currentSlotIndex - 1 + slotCount) % slotCount);
         }
 
         public void SwapToSlot(int index)
@@ -72,25 +68,80 @@ namespace Abdulrahman.InventorySystem
 
             _currentSlotIndex = index;
             EquipItem(_slots[_currentSlotIndex]);
-            
-            Debug.Log($"Swapped to slot {index + 1}");
         }
 
         private void EquipItem(GameObject prefab)
         {
             if (_currentItemInstance != null)
-            {
                 Destroy(_currentItemInstance);
-            }
+            _currentWeapon = null;
 
             if (prefab != null && hand != null)
             {
                 _currentItemInstance = Instantiate(prefab, hand);
                 _currentItemInstance.transform.localPosition = Vector3.zero;
                 _currentItemInstance.transform.localRotation = Quaternion.identity;
+
+                // Try to get the weapon component
+                _currentWeapon = _currentItemInstance.GetComponent<BaseWeapon>();
             }
         }
 
+        // ----- Weapon Input -----
+        private void HandleWeaponInput()
+        {
+            if (_currentWeapon == null) return;
+
+            // Fire input (semi‑auto and automatic)
+            if (Input.GetButtonDown("Fire1"))
+            {
+                _fireButtonHeld = true;
+
+                // For pump‑action: if needsPump, pump instead of firing
+                if (_currentWeapon.isPumpAction && _currentWeapon.needsPump)
+                {
+                    _currentWeapon.Pump();
+                }
+                else
+                {
+                    // Try to fire (works for semi‑auto and the first shot of auto)
+                    _currentWeapon.TryFire();
+                }
+            }
+            if (Input.GetButtonUp("Fire1"))
+            {
+                _fireButtonHeld = false;
+            }
+
+            // Automatic fire handled inside the weapon’s Update (BaseWeapon already checks GetButton)
+            // But we can also call TryFire continuously for automatics – the weapon handles fire rate.
+            // The weapon's Update already does that because it checks Input.GetButton.
+            // Since we instantiate weapons as children of the hand, their Update runs normally.
+
+            // Reload
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                StartCoroutine(_currentWeapon.Reload());
+            }
+
+            // Aim (hold)
+            if (Input.GetButton("Fire2"))
+            {
+                _currentWeapon.SetAiming(true);
+                _aimButtonHeld = true;
+            }
+            else if (_aimButtonHeld)
+            {
+                _currentWeapon.SetAiming(false);
+                _aimButtonHeld = false;
+            }
+
+            // Pump action (alternative: dedicated key, or we already handled via Fire button above)
+            // If you prefer a separate pump key, add: if (Input.GetKeyDown(KeyCode.???)) _currentWeapon.Pump();
+        }
+
+        // Public accessors for camera and UI
+        public BaseWeapon GetCurrentWeapon() => _currentWeapon;
         public int GetCurrentSlot() => _currentSlotIndex;
     }
 }
