@@ -30,14 +30,15 @@ namespace HorrorMansion.UI
         {
             if (closeButton != null)
                 closeButton.onClick.AddListener(Hide);
-        }
 
-        private void Start()
-        {
             if (showOnStart)
                 Show();
             else
                 Hide();
+        }
+
+        private void Start()
+        {
         }
 
         private void Update()
