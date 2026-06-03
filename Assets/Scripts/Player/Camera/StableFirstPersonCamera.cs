@@ -36,10 +36,19 @@ public class StableFirstPersonCamera : MonoBehaviour
 
         // Initialize yaw from current character rotation
         yaw = characterRoot.eulerAngles.y;
+        mouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 2f);
     }
 
     void LateUpdate()
     {
+
+        if (PauseMenu.GameIsPaused)
+        {
+            return;
+        }
+
+        mouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 2f);
+
         // --- Mouse input ---
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
