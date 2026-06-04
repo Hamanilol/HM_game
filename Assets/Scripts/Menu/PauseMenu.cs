@@ -12,73 +12,18 @@ public class PauseMenu : MonoBehaviour
     public GameObject pauseMenuUI;
     public GameObject settingsMenuUI;
 
-    [Header("Settings")]
-    public Slider sensitivitySlider;
-    public Slider volumeSlider;
-    public AudioMixer audioMixer;
-    public TMP_Dropdown qualityDropdown;
-    public Toggle fullscreenToggle;
+    private SettingsMenu _settingsMenu;
 
     void Start()
     {
+        _settingsMenu = GetComponentInChildren<SettingsMenu>(true);
+
         if (pauseMenuUI != null) pauseMenuUI.SetActive(false);
         if (settingsMenuUI != null) settingsMenuUI.SetActive(false);
 
         GameIsPaused = false;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-        // When the menu first loads, make sure the slider matches the saved setting
-        // If there is no saved setting yet, it defaults to 2f
-        if (sensitivitySlider != null)
-        {
-            sensitivitySlider.value = PlayerPrefs.GetFloat("MouseSensitivity", 2f);
-        }
-
-        // Load saved volume
-        if (volumeSlider != null)
-        {
-            // Default to 1 (max volume) if they haven't saved a setting yet
-            float savedVolume = PlayerPrefs.GetFloat("MasterVolume", 1f);
-            volumeSlider.value = savedVolume;
-            SetVolume(savedVolume);
-        }
-
-        if (qualityDropdown != null)
-        {
-            // 1. Wipe out the default "Option A, Option B" list
-            qualityDropdown.ClearOptions();
-
-            // 2. Ask Unity for the names of the graphics levels in your project
-            string[] qualityNames = QualitySettings.names;
-
-            // 3. Convert the array into a List, and feed it to the dropdown
-            List<string> options = new List<string>(qualityNames);
-            qualityDropdown.AddOptions(options);
-
-            // 4. Load the saved preference (or default to whatever Unity is currently using)
-            int savedQuality = PlayerPrefs.GetInt("GraphicsQuality", QualitySettings.GetQualityLevel());
-            qualityDropdown.value = savedQuality;
-            qualityDropdown.RefreshShownValue();
-
-            // 5. Apply the setting just to be safe
-            SetQuality(savedQuality);
-        }
-
-        if (fullscreenToggle != null)
-        {
-            // Get the saved number (default to 1, which means True)
-            int savedFullscreen = PlayerPrefs.GetInt("IsFullscreen", 1);
-
-            // Translate the number back into a true/false statement
-            bool isFullscreen = (savedFullscreen == 1);
-
-            // Update the UI checkmark
-            fullscreenToggle.isOn = isFullscreen;
-
-            // Apply the setting to the screen
-            Screen.fullScreen = isFullscreen;
-        }
     }
 
     void Update()
@@ -129,6 +74,11 @@ public class PauseMenu : MonoBehaviour
     {
         pauseMenuUI.SetActive(false);
         settingsMenuUI.SetActive(true);
+        
+        if (_settingsMenu != null)
+        {
+            _settingsMenu.LoadAndApplySettings();
+        }
     }
 
     public void BackToPause()
@@ -142,45 +92,9 @@ public class PauseMenu : MonoBehaviour
     public void QuitGame()
     {
         Debug.Log("Quitting game...");
-        Application.Quit();
-    }
-    public void SetSensitivity(float sensitivity)
-    {
-        // Save the new value to the PlayerPrefs notepad
-        PlayerPrefs.SetFloat("MouseSensitivity", sensitivity);
-        PlayerPrefs.Save();
-    }
-
-    public void SetVolume(float volume)
-    {
-        // Convert the 0.0001 to 1 slider value into a logarithmic decibel scale
-        audioMixer.SetFloat("MasterVolume", Mathf.Log10(volume) * 20);
-
-        // Save it to the digital notepad
-        PlayerPrefs.SetFloat("MasterVolume", volume);
-        PlayerPrefs.Save();
-    }
-
-    public void SetQuality(int qualityIndex)
-    {
-        // Tell Unity's engine to switch the graphics level
-        QualitySettings.SetQualityLevel(qualityIndex);
-
-        // Save the choice to the digital notepad
-        PlayerPrefs.SetInt("GraphicsQuality", qualityIndex);
-        PlayerPrefs.Save();
-    }
-
-    public void SetFullscreen(bool isFullscreen)
-    {
-        // Tell Unity to change the window mode
-        Screen.fullScreen = isFullscreen;
-
-        // Translate the true/false into a 1 or 0 for the filing clerk
-        int boolAsNumber = isFullscreen ? 1 : 0;
-
-        // Save it to the digital notepad
-        PlayerPrefs.SetInt("IsFullscreen", boolAsNumber);
-        PlayerPrefs.Save();
+        Time.timeScale = 1f;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        SceneManager.LoadScene("MainMenu");
     }
 }

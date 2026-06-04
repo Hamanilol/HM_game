@@ -7,7 +7,10 @@ public class MainMenuController : MonoBehaviour
     [Header("Scene Names")]
 
     [SerializeField] private string characterSelectScene = "CharacterSelect";
-    [SerializeField] private string optionsScene = "OptionsMenu";
+
+    [Header("Settings Menu")]
+
+    [SerializeField] private GameObject settingsMenu;
 
     [Header("Credits Video")]
 
@@ -109,13 +112,29 @@ public class MainMenuController : MonoBehaviour
         // PLAY SOUND
         PlayClickSound();
 
-        // DELAY LOAD
-        Invoke(nameof(LoadOptionsScene), 0.7f);
+        // DELAY OPEN
+        Invoke(nameof(ShowSettingsUI), 0.7f);
     }
 
-    void LoadOptionsScene()
+    void ShowSettingsUI()
     {
-        SceneManager.LoadScene(optionsScene);
+        if (settingsMenu != null)
+        {
+            settingsMenu.SetActive(true);
+            mainMenu.SetActive(false);
+        }
+    }
+
+    public void CloseOptions()
+    {
+        // PLAY SOUND
+        PlayClickSound();
+
+        if (settingsMenu != null)
+        {
+            settingsMenu.SetActive(false);
+            mainMenu.SetActive(true);
+        }
     }
 
     // =========================
