@@ -236,6 +236,11 @@ public abstract class BaseWeapon : MonoBehaviour
         nextFireTime = Mathf.Max(nextFireTime, Time.time + pumpDuration);
     }
 
+    public bool IsAiming { get; protected set; }
+
     // Other utilities
-    public virtual void SetAiming(bool aiming) { /* Override for ADS */ }
+    public virtual void SetAiming(bool aiming) 
+    {
+        IsAiming = aiming;
+    }
 }

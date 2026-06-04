@@ -65,10 +65,11 @@ namespace Abdulrahman.PlayerSystem
         public bool enableRunFov = true;
         public float normalFov = 60f;
         public float runFov = 70f;
+        public float aimFov = 40f;
         public float fovChangeSpeed = 8f;
 
         [Header("STAMINA SETTINGS")]
-        public float maxStamina = 100f;
+public float maxStamina = 100f;
         public float staminaDepletionRate = 20f;
         public float staminaRegenRate = 15f;
         private float _currentStamina;
@@ -317,9 +318,20 @@ namespace Abdulrahman.PlayerSystem
         private void HandleFovChange()
         {
             if (!enableRunFov || playerCamera.GetComponent<Camera>() == null) return;
+            
             bool isActuallyRunning = Input.GetKey(runKey) && Input.GetAxis("Vertical") > 0.1f;
+            
+            // Get aiming state from QuickSwapInventory
+            bool isAiming = false;
+            var inv = GetComponent<Abdulrahman.InventorySystem.QuickSwapInventory>();
+            if (inv != null && inv.GetCurrentWeapon() != null)
+            {
+                isAiming = inv.GetCurrentWeapon().IsAiming;
+            }
+
             Camera cam = playerCamera.GetComponent<Camera>();
-            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, isActuallyRunning ? runFov : normalFov, Time.deltaTime * fovChangeSpeed);
+            float targetFov = isAiming ? aimFov : (isActuallyRunning ? runFov : normalFov);
+            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFov, Time.deltaTime * fovChangeSpeed);
         }
 
         private void HandleHeadBob()
