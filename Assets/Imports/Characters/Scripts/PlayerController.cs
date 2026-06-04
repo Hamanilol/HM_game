@@ -104,8 +104,21 @@ namespace Abdulrahman.PlayerSystem
         public float CurrentStamina => _currentStamina;
         public float MaxStamina => maxStamina;
 
-        private void Start()
+        public void BoostJump(float multiplier, float duration)
         {
+            StartCoroutine(JumpBoostCoroutine(multiplier, duration));
+        }
+
+        private System.Collections.IEnumerator JumpBoostCoroutine(float multiplier, float duration)
+        {
+            float originalJumpHeight = jumpHeight;
+            jumpHeight *= multiplier;
+            yield return new WaitForSeconds(duration);
+            jumpHeight = originalJumpHeight;
+        }
+
+        private void Start()
+{
             _currentStamina = maxStamina;
             if (controller == null) controller = GetComponent<CharacterController>();
             Cursor.lockState = CursorLockMode.Locked;

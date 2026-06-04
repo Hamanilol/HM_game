@@ -59,8 +59,21 @@ namespace Abdulrahman.PlayerSystem
                 _targetAlpha = Mathf.Lerp(_targetAlpha, lowHealthAlpha, Time.deltaTime * vignetteFadeSpeed);
         }
 
-        public void TakeDamage(float amount, Vector3 knockbackDirection)
+        public void Heal(float amount)
         {
+            _currentHealth += amount;
+            _currentHealth = Mathf.Clamp(_currentHealth, 0, maxHealth);
+            OnHealthChanged?.Invoke(_currentHealth, maxHealth);
+        }
+
+        public void HealPercentage(float percent)
+        {
+            float amount = maxHealth * (percent / 100f);
+            Heal(amount);
+        }
+
+        public void TakeDamage(float amount, Vector3 knockbackDirection)
+{
             if (_currentHealth <= 0) return;
 
             Debug.Log($"[PlayerHealth] Taking {amount} damage. Current Health: {_currentHealth - amount}");
