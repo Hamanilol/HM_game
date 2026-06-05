@@ -1,8 +1,21 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Abdulrahman.InventorySystem;
 
 public class StableFirstPersonCamera : MonoBehaviour
 {
+    [Header("Co-Op Settings")]
+    public bool isPlayer2 = false;
+
+    [Header("Player 2 Gamepad Look (New Input System)")]
+    [Tooltip("Right-stick look speed in degrees per second for Player 2's gamepad.")]
+    public float gamepadLookSpeed = 200f;
+    [Tooltip("Invert the vertical look axis for Player 2's gamepad.")]
+    public bool gamepadInvertLookY = false;
+    [Range(0f, 0.6f)]
+    [Tooltip("Right-stick magnitude below this is treated as zero. Prevents the camera drifting when the stick is centered/idle.")]
+    public float gamepadLookDeadzone = 0.2f;
+
     [Header("Sensitivity")]
     
     public QuickSwapInventory inventory;   // Assign in inspector
@@ -24,6 +37,19 @@ public class StableFirstPersonCamera : MonoBehaviour
     private float yaw = 0f;    // we'll sync to characterRoot.rotation, but keep for clarity
 
     private Transform headBone;
+
+    /// <summary>
+    /// Radial deadzone with rescaling. Returns Vector2.zero while the stick is
+    /// inside the deadzone (eliminating idle drift), then ramps the magnitude
+    /// smoothly from 0 once the stick moves beyond the threshold.
+    /// </summary>
+    private static Vector2 ApplyRadialDeadzone(Vector2 stick, float deadzone)
+    {
+        float magnitude = stick.magnitude;
+        if (magnitude <= deadzone || magnitude <= 0.0001f) return Vector2.zero;
+        float scaled = Mathf.Clamp01((magnitude - deadzone) / (1f - deadzone));
+        return (stick / magnitude) * scaled;
+    }
 
     void Start()
     {
@@ -50,8 +76,38 @@ public class StableFirstPersonCamera : MonoBehaviour
         mouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 2f);
 
         // --- Mouse input ---
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        float mouseX = 0f;
+        float mouseY = 0f;
+
+        if (isPlayer2)
+        {
+            // Player 2: read the gamepad's RIGHT STICK via the new Input System.
+            // The old code read legacy "Joystick X/Y" (axes 3 & 4), which on a
+            // DualShock 4 over HID are the L2/R2 TRIGGERS, not the stick — that is
+            // why the triggers were controlling the look. The Gamepad abstraction
+            // maps rightStick correctly across controllers/platforms.
+            Gamepad gp = Gamepad.current;
+            if (gp != null)
+            {
+                Vector2 look = ApplyRadialDeadzone(gp.rightStick.ReadValue(), gamepadLookDeadzone);
+                // Sticks return a sustained value, so scale by deltaTime for
+                // frame-rate-independent rotation (degrees per second).
+                float lookYSign = gamepadInvertLookY ? -1f : 1f;
+                mouseX = look.x * gamepadLookSpeed * Time.deltaTime;
+                mouseY = look.y * gamepadLookSpeed * Time.deltaTime * lookYSign;
+            }
+            else
+            {
+                mouseX = 0f;
+                mouseY = 0f;
+            }
+        }
+        else
+        {
+            // If this is player 1, read the mouse
+            mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+            mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        }
 
         yaw   += mouseX;
         pitch -= mouseY;
