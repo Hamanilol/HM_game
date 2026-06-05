@@ -388,6 +388,24 @@ namespace Abdulrahman.PlayerSystem
             _velocity.y += direction.y * 40f;
         }
 
+        /// <summary>
+        /// Temporarily multiplies the player's jump height for a limited duration,
+        /// then reverts it. Used by the shop's "Jump Boost" purchase.
+        /// </summary>
+        /// <param name="multiplier">Factor applied to jumpHeight (e.g. 1.5 = +50%).</param>
+        /// <param name="duration">How long the boost lasts, in seconds.</param>
+        public void BoostJump(float multiplier, float duration)
+        {
+            StartCoroutine(JumpBoostCoroutine(multiplier, duration));
+        }
+
+        private System.Collections.IEnumerator JumpBoostCoroutine(float multiplier, float duration)
+        {
+            jumpHeight *= multiplier;
+            yield return new WaitForSeconds(duration);
+            jumpHeight /= multiplier;
+        }
+
         private void HandleFovChange()
         {
             if (!enableRunFov || playerCamera.GetComponent<Camera>() == null) return;
