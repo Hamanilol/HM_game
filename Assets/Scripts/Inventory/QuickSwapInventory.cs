@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Abdulrahman.PlayerSystem;
 
 namespace Abdulrahman.InventorySystem
 {
@@ -14,8 +15,7 @@ namespace Abdulrahman.InventorySystem
         public enum WeaponCategory
         {
             Unarmed = 0,
-            Pistol = 1,
-            LongGun = 2
+            Pistol = 1
         }
 
         [Header("Items")]
@@ -33,8 +33,14 @@ namespace Abdulrahman.InventorySystem
 
         private void Start()
         {
-            for (int i = 0; i < slotCount; i++)
+            // Auto-assign animator if missing
+            if (characterAnimator == null)
             {
+                characterAnimator = GetComponentInChildren<Animator>();
+            }
+
+            for (int i = 0; i < slotCount; i++)
+{
                 if (i < itemPrefabs.Count)
                     _slots.Add(itemPrefabs[i]);
                 else
@@ -115,8 +121,8 @@ namespace Abdulrahman.InventorySystem
             if (_currentWeapon is Pistol || _currentWeapon is SMG)
                 return WeaponCategory.Pistol;
 
-            // Rifles, shotguns, burst rifles -> LongGun pose
-            return WeaponCategory.LongGun;
+            // All other weapons now return to Unarmed/Normal Idle as requested
+            return WeaponCategory.Unarmed;
         }
 
         // ----- Weapon Input -----

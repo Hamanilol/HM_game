@@ -53,8 +53,10 @@ public abstract class BaseWeapon : MonoBehaviour
     // Reload coroutine reference for shell-by-shell interruption
     protected Coroutine reloadCoroutine;
 
+    public static float GlobalDamageMultiplier = 1.0f;
+
     protected virtual void Start()
-    {
+{
         currentAmmo = maxAmmo;
     }
 
@@ -110,8 +112,14 @@ public abstract class BaseWeapon : MonoBehaviour
         Ray ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
         if (Physics.Raycast(ray, out RaycastHit hit, range))
         {
-            Debug.Log($"Hit {hit.collider.name} for {damage} damage");
-            // Apply damage, spawn impact effects
+            float finalDamage = damage * GlobalDamageMultiplier;
+            Debug.Log($"Hit {hit.collider.name} for {finalDamage} damage");
+            
+            var enemyHealth = hit.collider.GetComponentInParent<Abdulrahman.EnemySystem.EnemyHealth>();
+            if (enemyHealth != null)
+            {
+                enemyHealth.TakeDamage(finalDamage);
+            }
         }
     }
 
@@ -126,10 +134,13 @@ public abstract class BaseWeapon : MonoBehaviour
 
             if (Physics.Raycast(Camera.main.transform.position, direction, out RaycastHit hit, range))
             {
-                Debug.Log($"Pellet hit {hit.collider.name}");
-                // Apply pellet damage
+                float finalDamage = damage * GlobalDamageMultiplier;
+                Debug.Log($"Pellet hit {hit.collider.name} for {finalDamage} damage");
+                
+                // Using the universal damage function
+                Abdulrahman.EnemySystem.EnemyHealth.DealDamageToEnemies(hit.collider.gameObject, finalDamage);
             }
-        }
+}
     }
 
     protected virtual void PlayFireEffects()
@@ -225,6 +236,11 @@ public abstract class BaseWeapon : MonoBehaviour
         nextFireTime = Mathf.Max(nextFireTime, Time.time + pumpDuration);
     }
 
+    public bool IsAiming { get; protected set; }
+
     // Other utilities
-    public virtual void SetAiming(bool aiming) { /* Override for ADS */ }
+    public virtual void SetAiming(bool aiming) 
+    {
+        IsAiming = aiming;
+    }
 }

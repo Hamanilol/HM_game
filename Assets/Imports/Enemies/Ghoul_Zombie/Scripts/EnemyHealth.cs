@@ -36,8 +36,20 @@ namespace Abdulrahman.EnemySystem
             }
         }
 
-        public void TakeDamage(float amount)
+        public static void DealDamageToEnemies(GameObject target, float amount)
         {
+            if (target == null) return;
+            
+            // Look for health component on the object or its parents
+            EnemyHealth health = target.GetComponentInParent<EnemyHealth>();
+            if (health != null)
+            {
+                health.TakeDamage(amount);
+            }
+        }
+
+        public void TakeDamage(float amount)
+{
             if (_currentHealth <= 0) return;
 
             _currentHealth -= amount;
