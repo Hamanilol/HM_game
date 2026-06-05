@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Horror_Mansion/Scenes/HM_Demo.unity
     guid: d88907bee68f18c4797f922806cd81ff
+  - enabled: 1
+    path: Assets/Horror_Mansion/Scenes/HM_Demo_SinglePlayer.unity
+    guid: 006d79563def76247aed610981a36dda
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
   m_UseUCBPForAssetBundles: 0

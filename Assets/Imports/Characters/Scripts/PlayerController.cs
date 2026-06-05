@@ -1,17 +1,31 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Abdulrahman.PlayerSystem
 {
     /// <summary>
-    /// Advanced First Person Controller.
+    /// Advanced First Person Controller optimized for Single Player and Local Co-Op.
     /// Handles movement, crouching, jumping, and camera effects like HeadBob and Tilt.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     [AddComponentMenu("Elman Game Dev Tools/Player System/Player Controller")]
     public class PlayerController : MonoBehaviour
     {
+        [Header("CO-OP CONFIGURATION")]
+        [Tooltip("Check this box on the Player 2 prefab instance in your scene.")]
+        public bool isPlayer2 = false;
+
         [Tooltip("Animator on the remote/third-person body of this player.")]
         public Animator bodyAnimator;
+
+        [Header("PLAYER 2 GAMEPAD (New Input System)")]
+        [Tooltip("Right-stick look speed in degrees per second for Player 2's gamepad.")]
+        public float gamepadLookSpeed = 200f;
+        [Tooltip("Invert the vertical look axis for Player 2's gamepad.")]
+        public bool gamepadInvertLookY = false;
+        [Range(0f, 0.6f)]
+        [Tooltip("Right-stick magnitude below this is treated as zero. Prevents the camera drifting (e.g. looking down-left forever) when the stick is centered/idle. Raise it if your controller drifts a lot.")]
+        public float gamepadLookDeadzone = 0.2f;
         [Header("REFERENCES")]
         [Tooltip("The CharacterController component used for physics-based movement.")]
         public CharacterController controller;
@@ -65,11 +79,10 @@ namespace Abdulrahman.PlayerSystem
         public bool enableRunFov = true;
         public float normalFov = 60f;
         public float runFov = 70f;
-        public float aimFov = 40f;
         public float fovChangeSpeed = 8f;
 
         [Header("STAMINA SETTINGS")]
-public float maxStamina = 100f;
+        public float maxStamina = 100f;
         public float staminaDepletionRate = 20f;
         public float staminaRegenRate = 15f;
         private float _currentStamina;
@@ -97,6 +110,17 @@ public float maxStamina = 100f;
         private bool _hasJumped;
         private MovementState _currentMovementState = MovementState.Walking;
 
+        // Centralized input tracking variables
+        private float _horizontalInput;
+        private float _verticalInput;
+        private float _horizontalRawInput;
+        private float _verticalRawInput;
+        private float _lookInputX;
+        private float _lookInputY;
+        private bool _runInput;
+        private bool _crouchInput;
+        private bool _jumpInput;
+
         public enum MovementState { Walking, Running, Crouching, Jumping }
 
         public bool IsGrounded => _isGrounded;
@@ -105,21 +129,8 @@ public float maxStamina = 100f;
         public float CurrentStamina => _currentStamina;
         public float MaxStamina => maxStamina;
 
-        public void BoostJump(float multiplier, float duration)
-        {
-            StartCoroutine(JumpBoostCoroutine(multiplier, duration));
-        }
-
-        private System.Collections.IEnumerator JumpBoostCoroutine(float multiplier, float duration)
-        {
-            float originalJumpHeight = jumpHeight;
-            jumpHeight *= multiplier;
-            yield return new WaitForSeconds(duration);
-            jumpHeight = originalJumpHeight;
-        }
-
         private void Start()
-{
+        {
             _currentStamina = maxStamina;
             if (controller == null) controller = GetComponent<CharacterController>();
             Cursor.lockState = CursorLockMode.Locked;
@@ -131,7 +142,6 @@ public float maxStamina = 100f;
             _targetPitch = playerCamera.localEulerAngles.x;
             _currentYaw = _targetYaw;
             _currentPitch = _targetPitch;
-            
 
             if (standingHeightMarker != null)
                 _markerHeightOffset = standingHeightMarker.transform.position.y - transform.position.y;
@@ -139,6 +149,8 @@ public float maxStamina = 100f;
 
         private void Update()
         {
+            GatherInputs(); // Step 1: Collect inputs based on player identity
+
             CheckGroundStatus();
             HandleCrouchLogic();
             UpdateMovementState();
@@ -147,16 +159,85 @@ public float maxStamina = 100f;
             HandleCameraControl();
             HandleCameraTilt();
             HandleFovChange();
-            
 
             if (enableHeadBob) HandleHeadBob();
             if (bodyAnimator != null) UpdateAnimator();
             HandleStamina();
         }
 
+        /// <summary>
+        /// Reads input data into safe framework variables depending on whether this component manages Player 1 or Player 2.
+        /// </summary>
+        private void GatherInputs()
+        {
+            if (!isPlayer2)
+            {
+                // PLAYER 1: Reads standard Desktop Keyboard and Mouse entries
+                _horizontalInput = Input.GetAxis("Horizontal");
+                _verticalInput = Input.GetAxis("Vertical");
+                _horizontalRawInput = Input.GetAxisRaw("Horizontal");
+                _verticalRawInput = Input.GetAxisRaw("Vertical");
+                _lookInputX = Input.GetAxis("Mouse X") * sensitivity;
+                _lookInputY = Input.GetAxis("Mouse Y") * sensitivity;
+                _runInput = Input.GetKey(runKey);
+                _crouchInput = Input.GetKey(crouchKey);
+                _jumpInput = Input.GetButtonDown("Jump");
+            }
+            else
+            {
+                // PLAYER 2: New Input System gamepad (e.g. DualShock 4 / PS4 controller).
+                // Reading via the Gamepad abstraction avoids platform-specific legacy
+                // axis-number issues (DS4 right-stick Y is not the same axis on every OS).
+                Gamepad gp = Gamepad.current;
+                if (gp != null)
+                {
+                    Vector2 move = gp.leftStick.ReadValue();
+                    // Read ONLY the right stick for look (never the triggers), then
+                    // apply a radial deadzone so idle stick drift produces zero rotation.
+                    Vector2 look = ApplyRadialDeadzone(gp.rightStick.ReadValue(), gamepadLookDeadzone);
+
+                    _horizontalInput = move.x;
+                    _verticalInput = move.y;
+                    _horizontalRawInput = Mathf.Abs(move.x) > 0.1f ? Mathf.Sign(move.x) : 0f;
+                    _verticalRawInput = Mathf.Abs(move.y) > 0.1f ? Mathf.Sign(move.y) : 0f;
+
+                    // Sticks return a sustained value, so scale by deltaTime for
+                    // frame-rate-independent rotation (degrees per second).
+                    float lookYSign = gamepadInvertLookY ? -1f : 1f;
+                    _lookInputX = look.x * gamepadLookSpeed * Time.deltaTime;
+                    _lookInputY = look.y * gamepadLookSpeed * Time.deltaTime * lookYSign;
+
+                    _runInput = gp.leftStickButton.isPressed;        // L3 = sprint (hold)
+                    _crouchInput = gp.buttonEast.isPressed;          // Circle = crouch (hold)
+                    _jumpInput = gp.buttonSouth.wasPressedThisFrame; // Cross = jump
+                }
+                else
+                {
+                    // No gamepad connected: keep Player 2 idle rather than reading stale input.
+                    _horizontalInput = _verticalInput = 0f;
+                    _horizontalRawInput = _verticalRawInput = 0f;
+                    _lookInputX = _lookInputY = 0f;
+                    _runInput = _crouchInput = _jumpInput = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Radial deadzone with rescaling. Returns Vector2.zero while the stick is
+        /// inside the deadzone (eliminating idle drift), then ramps the magnitude
+        /// smoothly from 0 once the stick moves beyond the threshold.
+        /// </summary>
+        private static Vector2 ApplyRadialDeadzone(Vector2 stick, float deadzone)
+        {
+            float magnitude = stick.magnitude;
+            if (magnitude <= deadzone || magnitude <= 0.0001f) return Vector2.zero;
+            float scaled = Mathf.Clamp01((magnitude - deadzone) / (1f - deadzone));
+            return (stick / magnitude) * scaled;
+        }
+
         private void HandleStamina()
         {
-            if (_currentMovementState == MovementState.Running && (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0))
+            if (_currentMovementState == MovementState.Running && (_horizontalInput != 0 || _verticalInput != 0))
             {
                 _currentStamina -= staminaDepletionRate * Time.deltaTime;
                 if (_currentStamina <= 0)
@@ -175,21 +256,18 @@ public float maxStamina = 100f;
                 }
             }
         }
-   private void UpdateAnimator()
-{
-    float horizontal = Input.GetAxisRaw("Horizontal");
-    float vertical = Input.GetAxisRaw("Vertical");
-    float speed = new Vector2(horizontal, vertical).magnitude * _currentMovementSpeed;
 
-    bodyAnimator.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
-    bodyAnimator.SetBool("IsCrouching", _isCrouching);
-    bodyAnimator.SetFloat("DirectionX", horizontal, 0.1f, Time.deltaTime);
-    bodyAnimator.SetFloat("DirectionY", vertical, 0.1f, Time.deltaTime);
-    bodyAnimator.SetBool("IsJumping", !_isGrounded);
-}
-        /// <summary>
-        /// SphereCast based ground detection to ensure stability on slopes and stairs.
-        /// </summary>
+        private void UpdateAnimator()
+        {
+            float speedMag = new Vector2(_horizontalRawInput, _verticalRawInput).magnitude * _currentMovementSpeed;
+
+            bodyAnimator.SetFloat("Speed", speedMag, 0.1f, Time.deltaTime);
+            bodyAnimator.SetBool("IsCrouching", _isCrouching);
+            bodyAnimator.SetFloat("DirectionX", _horizontalRawInput, 0.1f, Time.deltaTime);
+            bodyAnimator.SetFloat("DirectionY", _verticalRawInput, 0.1f, Time.deltaTime);
+            bodyAnimator.SetBool("IsJumping", !_isGrounded);
+        }
+
         private void CheckGroundStatus()
         {
             Vector3 origin = transform.position + Vector3.up * controller.radius;
@@ -205,7 +283,7 @@ public float maxStamina = 100f;
 
         private void UpdateMovementState()
         {
-            bool wantsToRun = Input.GetKey(runKey) && Input.GetAxis("Vertical") > 0.1f && _currentStamina > 0 && _canSprint;
+            bool wantsToRun = _runInput && _verticalInput > 0.1f && _currentStamina > 0 && _canSprint;
 
             if (!_isGrounded)
             {
@@ -228,11 +306,10 @@ public float maxStamina = 100f;
 
         private void HandleMovement()
         {
-            // Reverted to Input.GetAxis for smooth built-in interpolation
-            Vector3 moveInput = transform.right * Input.GetAxis("Horizontal") + transform.forward * Input.GetAxis("Vertical");
+            Vector3 moveInput = transform.right * _horizontalInput + transform.forward * _verticalInput;
             if (moveInput.magnitude > 1f) moveInput.Normalize();
 
-            if (Input.GetButtonDown("Jump") && _isGrounded && !_isCrouching)
+            if (_jumpInput && _isGrounded && !_isCrouching)
             {
                 _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
                 _hasJumped = true;
@@ -243,17 +320,15 @@ public float maxStamina = 100f;
                 standingHeightMarker.transform.position = new Vector3(transform.position.x, transform.position.y + _markerHeightOffset, transform.position.z);
 
             controller.Move(moveInput * _currentMovementSpeed * Time.deltaTime);
-            _velocity.y += gravity * Time.deltaTime; 
+            _velocity.y += gravity * Time.deltaTime;
             _velocity.x = Mathf.Lerp(_velocity.x, 0f, Time.deltaTime * 10f);
             _velocity.z = Mathf.Lerp(_velocity.z, 0f, Time.deltaTime * 10f);
             controller.Move(_velocity * Time.deltaTime);
-         
         }
 
         private void HandleCrouchLogic()
         {
-            _isCrouching = Input.GetKey(crouchKey) || !CanStandUp();
-            
+            _isCrouching = _crouchInput || !CanStandUp();
             _targetHeight = _isCrouching ? crouchHeight : _originalHeight;
         }
 
@@ -277,13 +352,10 @@ public float maxStamina = 100f;
 
         private void HandleCameraControl()
         {
-            float mouseX = Input.GetAxis("Mouse X") * sensitivity;
-            float mouseY = Input.GetAxis("Mouse Y") * sensitivity;
+            _smoothInputX = Mathf.Lerp(_smoothInputX, _lookInputX, Time.deltaTime * cameraWeight);
 
-            _smoothInputX = Mathf.Lerp(_smoothInputX, mouseX, Time.deltaTime * cameraWeight);
-
-            _targetYaw += mouseX;
-            _targetPitch -= mouseY;
+            _targetYaw += _lookInputX;
+            _targetPitch -= _lookInputY;
             _targetPitch = Mathf.Clamp(_targetPitch, maxLookDownAngle, maxLookUpAngle);
 
             float smoothFactor = Mathf.Clamp01(Time.deltaTime * cameraWeight);
@@ -298,7 +370,7 @@ public float maxStamina = 100f;
         {
             if (!enableCameraTilt) { _currentTilt = 0; return; }
 
-            float keyboardTilt = -Input.GetAxis("Horizontal") * tiltAmount;
+            float keyboardTilt = -_horizontalInput * tiltAmount;
             float mouseTilt = -_smoothInputX * turnTiltAmount;
             float targetTiltTotal = keyboardTilt + mouseTilt;
 
@@ -308,6 +380,7 @@ public float maxStamina = 100f;
             targetTiltTotal = Mathf.Clamp(targetTiltTotal, -maxTotalTilt, maxTotalTilt);
             _currentTilt = Mathf.Lerp(_currentTilt, targetTiltTotal, Time.deltaTime * tiltSmoothness);
         }
+
         public void ApplyKnockback(Vector3 direction)
         {
             _velocity.x += direction.x * 40f;
@@ -318,25 +391,14 @@ public float maxStamina = 100f;
         private void HandleFovChange()
         {
             if (!enableRunFov || playerCamera.GetComponent<Camera>() == null) return;
-            
-            bool isActuallyRunning = Input.GetKey(runKey) && Input.GetAxis("Vertical") > 0.1f;
-            
-            // Get aiming state from QuickSwapInventory
-            bool isAiming = false;
-            var inv = GetComponent<Abdulrahman.InventorySystem.QuickSwapInventory>();
-            if (inv != null && inv.GetCurrentWeapon() != null)
-            {
-                isAiming = inv.GetCurrentWeapon().IsAiming;
-            }
-
+            bool isActuallyRunning = _runInput && _verticalInput > 0.1f;
             Camera cam = playerCamera.GetComponent<Camera>();
-            float targetFov = isAiming ? aimFov : (isActuallyRunning ? runFov : normalFov);
-            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFov, Time.deltaTime * fovChangeSpeed);
+            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, isActuallyRunning ? runFov : normalFov, Time.deltaTime * fovChangeSpeed);
         }
 
         private void HandleHeadBob()
         {
-            float moveMag = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")).magnitude;
+            float moveMag = new Vector2(_horizontalInput, _verticalInput).magnitude;
             float currentCamH = _cameraBaseHeight * (controller.height / _originalHeight);
 
             if (!_isGrounded || moveMag <= 0.1f)
@@ -357,10 +419,6 @@ public float maxStamina = 100f;
             playerCamera.localPosition = Vector3.Lerp(playerCamera.localPosition, newPos, Time.deltaTime * bobSmoothness);
         }
 
-        /// <summary>
-        /// Checks for obstacles above the player when trying to stand up.
-        /// </summary>
-        /// <returns>True if there is enough space to stand.</returns>
         public bool CanStandUp()
         {
             if (standingHeightMarker == null) return true;

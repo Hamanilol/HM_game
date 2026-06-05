@@ -129,8 +129,14 @@ public class CharacterSelector : MonoBehaviour
 
     void LoadGameScene()
     {
-        // LOAD DEMO SCENE
-        SceneManager.LoadScene("HM_Demo");
+        // Load the co-op or single-player variant depending on the mode the
+        // player picked in the main menu (defaults to Multiplayer if unset).
+        string gameMode = PlayerPrefs.GetString("GameMode", "Multiplayer");
+
+        if (gameMode == "SinglePlayer")
+            SceneManager.LoadScene("HM_Demo_SinglePlayer");
+        else
+            SceneManager.LoadScene("HM_Demo");
     }
 
     // =========================
