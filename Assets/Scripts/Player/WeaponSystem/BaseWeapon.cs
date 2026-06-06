@@ -42,6 +42,14 @@ public abstract class BaseWeapon : MonoBehaviour
     public AudioClip pumpSound;
     public Animator weaponAnimator;          // Optional weapon animator
 
+    // Visual recoil runtime
+    private Vector3 baseLocalPosition;
+    private Quaternion baseLocalRotation;
+    private Vector3 currentVisualTranslation;
+    private Vector3 currentVisualRotation;
+    private Vector3 translationVelocity;
+    private Vector3 rotationVelocity;
+
     // State
     protected float nextFireTime = 0f;
     protected bool isReloading = false;
@@ -55,9 +63,41 @@ public abstract class BaseWeapon : MonoBehaviour
 
     public static float GlobalDamageMultiplier = 1.0f;
 
+    [Header("Visual Recoil (Weapon Model)")]
+    public Vector3 visualRecoilTranslation = new Vector3(0f, 0.02f, -0.05f); // X=right, Y=up, Z=forward (backward negative)
+    public Vector3 visualRecoilRotation    = new Vector3(-3f, 0f, 0f);       // X=pitch, Y=yaw, Z=roll
+    public float   visualRecoilRandomHorizontal = 0.01f;                    // Random horizontal jitter
+    public float   visualRecoilSpringFrequency  = 10f;                      // How fast the spring oscillates
+    [Range(0f, 1f)]
+    public float   visualRecoilSpringDamping    = 0.4f;                     // 0 = no damping, 1 = critically damped (no overshoot)
+
+    private static float Spring(float current, float target, ref float velocity, float frequency, float damping, float deltaTime)
+    {
+        float angularFrequency = frequency * 2f * Mathf.PI;
+        float f = 1f + 2f * deltaTime * damping * angularFrequency;
+        float oo = angularFrequency * angularFrequency;
+        float hoo = deltaTime * oo;
+        float hhoo = deltaTime * hoo;
+        float detInv = 1f / (f + hhoo);
+        float detX = f * current + deltaTime * velocity + hhoo * target;
+        float detV = velocity + hoo * (target - current);
+        velocity = detV * detInv;
+        return detX * detInv;
+    }
+
     protected virtual void Start()
-{
+    {
         currentAmmo = maxAmmo;
+
+        // Capture the original local transform (relative to WeaponHolder)
+        baseLocalPosition = transform.localPosition;
+        baseLocalRotation = transform.localRotation;
+
+        // Initialize offsets to zero
+        currentVisualTranslation = Vector3.zero;
+        currentVisualRotation = Vector3.zero;
+        translationVelocity = Vector3.zero;
+        rotationVelocity = Vector3.zero;
     }
 
     // Called by external input (semi‑auto)
@@ -84,12 +124,30 @@ public abstract class BaseWeapon : MonoBehaviour
     {
         if (isAutomatic && Input.GetButton("Fire1") && Time.time >= nextFireTime)
             TryFire();
+
+        // --- Visual recoil spring ---
+        float dt = Time.deltaTime;
+
+        // Translation
+        currentVisualTranslation.x = Spring(currentVisualTranslation.x, 0f, ref translationVelocity.x, visualRecoilSpringFrequency, visualRecoilSpringDamping, dt);
+        currentVisualTranslation.y = Spring(currentVisualTranslation.y, 0f, ref translationVelocity.y, visualRecoilSpringFrequency, visualRecoilSpringDamping, dt);
+        currentVisualTranslation.z = Spring(currentVisualTranslation.z, 0f, ref translationVelocity.z, visualRecoilSpringFrequency, visualRecoilSpringDamping, dt);
+
+        // Rotation
+        currentVisualRotation.x = Spring(currentVisualRotation.x, 0f, ref rotationVelocity.x, visualRecoilSpringFrequency, visualRecoilSpringDamping, dt);
+        currentVisualRotation.y = Spring(currentVisualRotation.y, 0f, ref rotationVelocity.y, visualRecoilSpringFrequency, visualRecoilSpringDamping, dt);
+        currentVisualRotation.z = Spring(currentVisualRotation.z, 0f, ref rotationVelocity.z, visualRecoilSpringFrequency, visualRecoilSpringDamping, dt);
+
+        // Apply to the weapon's transform
+        transform.localPosition = baseLocalPosition + currentVisualTranslation;
+        transform.localRotation = baseLocalRotation * Quaternion.Euler(currentVisualRotation);
     }
 
     protected virtual void Fire()
     {
         currentAmmo--;
         AddRecoil();
+        AddVisualRecoil();
         PlayFireEffects();
 
         if (isShotgun)
@@ -110,17 +168,22 @@ public abstract class BaseWeapon : MonoBehaviour
     protected virtual void PerformRaycast()
     {
         Ray ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
-        if (Physics.Raycast(ray, out RaycastHit hit, range))
+        RaycastHit hit;
+        Vector3 targetPoint;
+
+        if (Physics.Raycast(ray, out hit, range))
         {
-            float finalDamage = damage * GlobalDamageMultiplier;
-            Debug.Log($"Hit {hit.collider.name} for {finalDamage} damage");
-            
-            var enemyHealth = hit.collider.GetComponentInParent<Abdulrahman.EnemySystem.EnemyHealth>();
-            if (enemyHealth != null)
-            {
-                enemyHealth.TakeDamage(finalDamage);
-            }
+            targetPoint = hit.point;
+            // Apply damage, spawn impact effects here
+            Debug.Log($"Hit {hit.collider.name} for {damage} damage");
         }
+        else
+        {
+            targetPoint = ray.GetPoint(range); // max range point if nothing hit
+        }
+
+        // Now spawn a visual tracer from the muzzle to the targetPoint
+        SpawnTracer(muzzlePoint.position, targetPoint);
     }
 
     // Shotgun cone blast
@@ -130,17 +193,22 @@ public abstract class BaseWeapon : MonoBehaviour
         {
             Vector3 direction = Camera.main.transform.forward;
             direction = Quaternion.Euler(Random.Range(-spreadAngle, spreadAngle),
-                                         Random.Range(-spreadAngle, spreadAngle), 0) * direction;
+                                        Random.Range(-spreadAngle, spreadAngle), 0) * direction;
 
-            if (Physics.Raycast(Camera.main.transform.position, direction, out RaycastHit hit, range))
-            {
-                float finalDamage = damage * GlobalDamageMultiplier;
-                Debug.Log($"Pellet hit {hit.collider.name} for {finalDamage} damage");
-                
-                // Using the universal damage function
-                Abdulrahman.EnemySystem.EnemyHealth.DealDamageToEnemies(hit.collider.gameObject, finalDamage);
-            }
-}
+            Vector3 origin = Camera.main.transform.position;
+            Ray ray = new Ray(origin, direction);
+            RaycastHit hit;
+            Vector3 targetPoint;
+
+            if (Physics.Raycast(ray, out hit, range))
+                targetPoint = hit.point;
+            else
+                targetPoint = ray.GetPoint(range);
+
+            // Tracer from muzzle, but the visual spread will be slightly off from actual hit.
+            // This is acceptable for shotguns.
+            SpawnTracer(muzzlePoint.position, targetPoint);
+        }
     }
 
     protected virtual void PlayFireEffects()
@@ -242,5 +310,25 @@ public abstract class BaseWeapon : MonoBehaviour
     public virtual void SetAiming(bool aiming) 
     {
         IsAiming = aiming;
+    }
+
+    protected virtual void SpawnTracer(Vector3 from, Vector3 to)
+    {
+        // Simple line renderer, or instantiate a tracer prefab
+        // Using a temporary line for demo purposes:
+        Debug.DrawLine(from, to, Color.red, 0.1f);
+
+        // For a proper effect, you could instantiate a trail renderer or
+        // particle system that travels from `from` to `to`.
+        // Example: if (tracerPrefab) { ... Instantiate and set start/end ... }
+    }
+
+    protected virtual void AddVisualRecoil()
+    {
+        Vector3 translationImpulse = visualRecoilTranslation;
+        translationImpulse.x += Random.Range(-visualRecoilRandomHorizontal, visualRecoilRandomHorizontal);
+
+        currentVisualTranslation += translationImpulse;
+        currentVisualRotation += visualRecoilRotation;
     }
 }

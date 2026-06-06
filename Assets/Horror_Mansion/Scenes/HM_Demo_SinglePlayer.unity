@@ -49268,7 +49268,7 @@ Terrain:
   m_GameObject: {fileID: 1387405358}
   m_Enabled: 1
   serializedVersion: 6
-  m_TerrainData: {fileID: 15600000, guid: 5de0cd1207d2c7d44b5f0716915e97da, type: 2}
+  m_TerrainData: {fileID: 0}
   m_TreeDistance: 5000
   m_TreeBillboardDistance: 50
   m_TreeCrossFadeLength: 5
@@ -61841,6 +61841,11 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 1989485550670715467, guid: 0184fee55bb58a44bba873cafe04a94e, type: 3}
   m_PrefabInstance: {fileID: 1706571616}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1706703270 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 340438944768058018, guid: 0119efff35616964490b9944488b5fe9, type: 3}
+  m_PrefabInstance: {fileID: 4648905391500504721}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1710942098
 PrefabInstance:
@@ -86763,6 +86768,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 340438944768058018, guid: 0119efff35616964490b9944488b5fe9, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 340438944768058018, guid: 0119efff35616964490b9944488b5fe9, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 340438944768058018, guid: 0119efff35616964490b9944488b5fe9, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2276197685614002111, guid: 0119efff35616964490b9944488b5fe9, type: 3}
+      propertyPath: near clip plane
+      value: 0.01
+      objectReference: {fileID: 0}
     - target: {fileID: 2276197685614002111, guid: 0119efff35616964490b9944488b5fe9, type: 3}
       propertyPath: m_NormalizedViewPortRect.width
       value: 1
@@ -86835,13 +86856,19 @@ PrefabInstance:
       propertyPath: deathScreen
       value: 
       objectReference: {fileID: 1993773787}
+    - target: {fileID: 7356716285232801086, guid: 0119efff35616964490b9944488b5fe9, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8114465471620770815, guid: 0119efff35616964490b9944488b5fe9, type: 3}
       propertyPath: spawner
       value: 
       objectReference: {fileID: 1112916456}
-    m_RemovedComponents:
-    - {fileID: 5472966156504994501, guid: 0119efff35616964490b9944488b5fe9, type: 3}
-    - {fileID: 1132727294534449192, guid: 0119efff35616964490b9944488b5fe9, type: 3}
+    - target: {fileID: 8878348801399406190, guid: 0119efff35616964490b9944488b5fe9, type: 3}
+      propertyPath: hand
+      value: 
+      objectReference: {fileID: 1706703270}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
