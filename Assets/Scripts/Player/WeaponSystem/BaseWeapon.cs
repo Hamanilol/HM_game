@@ -63,6 +63,23 @@ public abstract class BaseWeapon : MonoBehaviour
 
     public static float GlobalDamageMultiplier = 1.0f;
 
+    // The camera this weapon should aim/raycast through. Resolved from the weapon's
+    // parent hierarchy (each player parents weapons under their own camera), falling
+    // back to Camera.main. This makes split-screen co-op aim correctly per player
+    // instead of every weapon using the single Camera.main.
+    private Camera _ownerCamera;
+    protected Camera OwnerCamera
+    {
+        get
+        {
+            if (_ownerCamera == null)
+                _ownerCamera = GetComponentInParent<Camera>();
+            if (_ownerCamera == null)
+                _ownerCamera = Camera.main;
+            return _ownerCamera;
+        }
+    }
+
     [Header("Visual Recoil (Weapon Model)")]
     public Vector3 visualRecoilTranslation = new Vector3(0f, 0.02f, -0.05f); // X=right, Y=up, Z=forward (backward negative)
     public Vector3 visualRecoilRotation    = new Vector3(-3f, 0f, 0f);       // X=pitch, Y=yaw, Z=roll
@@ -189,13 +206,14 @@ public abstract class BaseWeapon : MonoBehaviour
     // Shotgun cone blast
     protected virtual void PerformShotgunRaycast()
     {
+        Camera cam = OwnerCamera;
         for (int i = 0; i < pelletsPerShot; i++)
         {
-            Vector3 direction = Camera.main.transform.forward;
+            Vector3 direction = cam.transform.forward;
             direction = Quaternion.Euler(Random.Range(-spreadAngle, spreadAngle),
                                         Random.Range(-spreadAngle, spreadAngle), 0) * direction;
 
-            Vector3 origin = Camera.main.transform.position;
+            Vector3 origin = cam.transform.position;
             Ray ray = new Ray(origin, direction);
             RaycastHit hit;
             Vector3 targetPoint;

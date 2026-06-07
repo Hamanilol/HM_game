@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using Abdulrahman.PlayerSystem;
 
@@ -31,6 +32,10 @@ namespace Abdulrahman.InventorySystem
         private bool _fireButtonHeld;
         private bool _aimButtonHeld;
 
+        // Player identity (drives keyboard/mouse vs gamepad input for co-op)
+        private PlayerController _owner;
+        private bool _isPlayer2;
+
         private void Start()
         {
             // Auto-assign animator if missing
@@ -38,6 +43,11 @@ namespace Abdulrahman.InventorySystem
             {
                 characterAnimator = GetComponentInChildren<Animator>();
             }
+
+            // Determine which player owns this inventory so input is routed correctly.
+            _owner = GetComponent<PlayerController>();
+            if (_owner == null) _owner = GetComponentInParent<PlayerController>();
+            _isPlayer2 = _owner != null && _owner.isPlayer2;
 
             for (int i = 0; i < slotCount; i++)
 {
@@ -55,25 +65,37 @@ namespace Abdulrahman.InventorySystem
             HandleWeaponInput();
         }
 
-        // ----- Slot Switching (unchanged logic) -----
+        // ----- Slot Switching -----
         private void HandleSlotInput()
         {
-            // Number keys 1‑9
-            for (int i = 0; i < slotCount && i < 9; i++)
+            if (!_isPlayer2)
             {
-                if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+                // PLAYER 1: number keys + scroll wheel
+                for (int i = 0; i < slotCount && i < 9; i++)
                 {
-                    SwapToSlot(i);
-                    break;
+                    if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+                    {
+                        SwapToSlot(i);
+                        break;
+                    }
                 }
-            }
 
-            // Scroll wheel
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
-            if (scroll > 0f)
-                SwapToSlot((_currentSlotIndex + 1) % slotCount);
-            else if (scroll < 0f)
-                SwapToSlot((_currentSlotIndex - 1 + slotCount) % slotCount);
+                float scroll = Input.GetAxis("Mouse ScrollWheel");
+                if (scroll > 0f)
+                    SwapToSlot((_currentSlotIndex + 1) % slotCount);
+                else if (scroll < 0f)
+                    SwapToSlot((_currentSlotIndex - 1 + slotCount) % slotCount);
+            }
+            else
+            {
+                // PLAYER 2: gamepad shoulder buttons cycle weapons
+                Gamepad gp = Gamepad.current;
+                if (gp == null) return;
+                if (gp.rightShoulder.wasPressedThisFrame)
+                    SwapToSlot((_currentSlotIndex + 1) % slotCount);
+                else if (gp.leftShoulder.wasPressedThisFrame)
+                    SwapToSlot((_currentSlotIndex - 1 + slotCount) % slotCount);
+            }
         }
 
         public void SwapToSlot(int index)
@@ -130,43 +152,64 @@ namespace Abdulrahman.InventorySystem
         {
             if (_currentWeapon == null) return;
 
-            // Fire input (semi‑auto and automatic).
-            // Use the explicit left mouse button instead of the "Fire1" axis,
-            // because the default "Fire1" binding also includes Left Ctrl, which
-            // is the crouch key — that caused crouching to fire the weapon.
-            if (Input.GetMouseButtonDown(0))
+            // Gather input from the correct device for this player.
+            bool fireDown, fireHeld, aimHeld, reloadDown;
+
+            if (!_isPlayer2)
+            {
+                // PLAYER 1: keyboard + mouse.
+                // Use the explicit left mouse button instead of the "Fire1" axis,
+                // because the default "Fire1" binding also includes Left Ctrl, which
+                // is the crouch key — that caused crouching to fire the weapon.
+                fireDown   = Input.GetMouseButtonDown(0);
+                fireHeld   = Input.GetMouseButton(0);
+                aimHeld    = Input.GetMouseButton(1);   // right mouse to aim
+                reloadDown = Input.GetKeyDown(KeyCode.R);
+            }
+            else
+            {
+                // PLAYER 2: gamepad. Right trigger = fire, left trigger = aim,
+                // Square/X (buttonWest) = reload.
+                Gamepad gp = Gamepad.current;
+                if (gp != null)
+                {
+                    fireDown   = gp.rightTrigger.wasPressedThisFrame;
+                    fireHeld   = gp.rightTrigger.isPressed;
+                    aimHeld    = gp.leftTrigger.isPressed;
+                    reloadDown = gp.buttonWest.wasPressedThisFrame;
+                }
+                else
+                {
+                    fireDown = fireHeld = aimHeld = reloadDown = false;
+                }
+            }
+
+            // Fire (semi-auto: on press; automatic: while held — weapon gates by fire rate)
+            if (fireDown)
             {
                 _fireButtonHeld = true;
 
                 // For pump‑action: if needsPump, pump instead of firing
                 if (_currentWeapon.isPumpAction && _currentWeapon.needsPump)
-                {
                     _currentWeapon.Pump();
-                }
                 else
-                {
-                    // Try to fire (works for semi‑auto and the first shot of auto)
                     _currentWeapon.TryFire();
-                }
             }
-            if (Input.GetMouseButtonUp(0))
+            else if (fireHeld && _currentWeapon.isAutomatic)
             {
-                _fireButtonHeld = false;
+                _currentWeapon.TryFire();
             }
-
-            // Automatic fire handled inside the weapon’s Update (BaseWeapon already checks GetButton)
-            // But we can also call TryFire continuously for automatics – the weapon handles fire rate.
-            // The weapon's Update already does that because it checks Input.GetButton.
-            // Since we instantiate weapons as children of the hand, their Update runs normally.
+            if (!fireHeld)
+                _fireButtonHeld = false;
 
             // Reload
-            if (Input.GetKeyDown(KeyCode.R))
+            if (reloadDown)
             {
                 StartCoroutine(_currentWeapon.Reload());
             }
 
-            // Aim (hold) — explicit right mouse button (avoids legacy axis conflicts)
-            if (Input.GetMouseButton(1))
+            // Aim (hold)
+            if (aimHeld)
             {
                 _currentWeapon.SetAiming(true);
                 _aimButtonHeld = true;
@@ -176,9 +219,6 @@ namespace Abdulrahman.InventorySystem
                 _currentWeapon.SetAiming(false);
                 _aimButtonHeld = false;
             }
-
-            // Pump action (alternative: dedicated key, or we already handled via Fire button above)
-            // If you prefer a separate pump key, add: if (Input.GetKeyDown(KeyCode.???)) _currentWeapon.Pump();
         }
 
         // Public accessors for camera and UI

@@ -15,8 +15,20 @@ public class PauseMenu : MonoBehaviour
     [Header("Gameplay HUD")]
     [Tooltip("Player HUD canvas/root to hide while paused so it doesn't overlay the pause menu.")]
     public GameObject playerHUD;
+    [Tooltip("Additional HUD canvases to hide while paused (e.g. Player 2's HUD and per-player gameplay canvases in co-op).")]
+    public System.Collections.Generic.List<GameObject> additionalHUDs = new System.Collections.Generic.List<GameObject>();
 
     private SettingsMenu _settingsMenu;
+
+    private void SetHUDVisible(bool visible)
+    {
+        if (playerHUD != null) playerHUD.SetActive(visible);
+        if (additionalHUDs != null)
+        {
+            foreach (var hud in additionalHUDs)
+                if (hud != null) hud.SetActive(visible);
+        }
+    }
 
     void Start()
     {
@@ -66,7 +78,7 @@ public class PauseMenu : MonoBehaviour
     void Pause()
     {
         pauseMenuUI.SetActive(true);
-        if (playerHUD != null) playerHUD.SetActive(false);
+        SetHUDVisible(false);
         Time.timeScale = 0f;
         GameIsPaused = true;
 
