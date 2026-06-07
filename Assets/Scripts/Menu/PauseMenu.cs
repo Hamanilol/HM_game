@@ -12,6 +12,10 @@ public class PauseMenu : MonoBehaviour
     public GameObject pauseMenuUI;
     public GameObject settingsMenuUI;
 
+    [Header("Gameplay HUD")]
+    [Tooltip("Player HUD canvas/root to hide while paused so it doesn't overlay the pause menu.")]
+    public GameObject playerHUD;
+
     private SettingsMenu _settingsMenu;
 
     void Start()
@@ -51,6 +55,7 @@ public class PauseMenu : MonoBehaviour
     {
         pauseMenuUI.SetActive(false);
         settingsMenuUI.SetActive(false); // Ensure this is closed too
+        if (playerHUD != null) playerHUD.SetActive(true);
         Time.timeScale = 1f;
         GameIsPaused = false;
 
@@ -61,6 +66,7 @@ public class PauseMenu : MonoBehaviour
     void Pause()
     {
         pauseMenuUI.SetActive(true);
+        if (playerHUD != null) playerHUD.SetActive(false);
         Time.timeScale = 0f;
         GameIsPaused = true;
 

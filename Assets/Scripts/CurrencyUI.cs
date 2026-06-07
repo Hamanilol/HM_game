@@ -136,43 +136,4 @@ public class CurrencyUI : MonoBehaviour
     {
         eventText.gameObject.SetActive(false);
     }
-
-    // =========================
-    // TESTING
-    // =========================
-
-    void Update()
-    {
-        // PRESS SPACE = NORMAL MONEY
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            AddMoney(50);
-        }
-
-        // PRESS G = BIG GHOST REWARD
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            AddMoney(250);
-        }
-
-        // PRESS H = LOSE MONEY
-        if (Input.GetKeyDown(KeyCode.H))
-        {
-            RemoveMoney(100);
-        }
-
-        // PRESS J = 2X BONUS
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-            SetMultiplier(2);
-        }
-
-        // PRESS K = RESET BONUS
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            ResetMultiplier();
-
-            ShowEvent("BONUS ENDED");
-        }
-    }
 }

@@ -122,7 +122,7 @@ public abstract class BaseWeapon : MonoBehaviour
     // Override for automatic weapons to call TryFire continuously in Update
     protected virtual void Update()
     {
-        if (isAutomatic && Input.GetButton("Fire1") && Time.time >= nextFireTime)
+        if (isAutomatic && Input.GetMouseButton(0) && Time.time >= nextFireTime)
             TryFire();
 
         // --- Visual recoil spring ---
@@ -174,8 +174,8 @@ public abstract class BaseWeapon : MonoBehaviour
         if (Physics.Raycast(ray, out hit, range))
         {
             targetPoint = hit.point;
-            // Apply damage, spawn impact effects here
-            Debug.Log($"Hit {hit.collider.name} for {damage} damage");
+            // Apply damage to any enemy hit (searches the hit object and its parents).
+            Abdulrahman.EnemySystem.EnemyHealth.DealDamageToEnemies(hit.collider.gameObject, damage * GlobalDamageMultiplier);
         }
         else
         {
@@ -201,7 +201,11 @@ public abstract class BaseWeapon : MonoBehaviour
             Vector3 targetPoint;
 
             if (Physics.Raycast(ray, out hit, range))
+            {
                 targetPoint = hit.point;
+                // Each pellet deals a fraction of the total damage.
+                Abdulrahman.EnemySystem.EnemyHealth.DealDamageToEnemies(hit.collider.gameObject, (damage / pelletsPerShot) * GlobalDamageMultiplier);
+            }
             else
                 targetPoint = ray.GetPoint(range);
 

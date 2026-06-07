@@ -130,8 +130,11 @@ namespace Abdulrahman.InventorySystem
         {
             if (_currentWeapon == null) return;
 
-            // Fire input (semi‑auto and automatic)
-            if (Input.GetButtonDown("Fire1"))
+            // Fire input (semi‑auto and automatic).
+            // Use the explicit left mouse button instead of the "Fire1" axis,
+            // because the default "Fire1" binding also includes Left Ctrl, which
+            // is the crouch key — that caused crouching to fire the weapon.
+            if (Input.GetMouseButtonDown(0))
             {
                 _fireButtonHeld = true;
 
@@ -146,7 +149,7 @@ namespace Abdulrahman.InventorySystem
                     _currentWeapon.TryFire();
                 }
             }
-            if (Input.GetButtonUp("Fire1"))
+            if (Input.GetMouseButtonUp(0))
             {
                 _fireButtonHeld = false;
             }
@@ -162,8 +165,8 @@ namespace Abdulrahman.InventorySystem
                 StartCoroutine(_currentWeapon.Reload());
             }
 
-            // Aim (hold)
-            if (Input.GetButton("Fire2"))
+            // Aim (hold) — explicit right mouse button (avoids legacy axis conflicts)
+            if (Input.GetMouseButton(1))
             {
                 _currentWeapon.SetAiming(true);
                 _aimButtonHeld = true;

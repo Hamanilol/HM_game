@@ -64,7 +64,10 @@ namespace Abdulrahman.EnemySystem
                 if (_currencyUI != null)
                     _currencyUI.AddMoney(moneyReward);
                 
-                _enemyAI.Die();
+                if (_enemyAI != null)
+                    _enemyAI.Die();
+                else
+                    Destroy(gameObject);
             }
         }
     }
