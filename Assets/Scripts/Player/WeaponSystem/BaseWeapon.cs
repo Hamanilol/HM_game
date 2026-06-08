@@ -42,6 +42,13 @@ public abstract class BaseWeapon : MonoBehaviour
     public AudioClip pumpSound;
     public Animator weaponAnimator;          // Optional weapon animator
 
+    [Header("Visual Projectiles")]
+    public GameObject bulletPrefab;
+    public GameObject casingPrefab;
+    public Transform casingExitLocation;
+    public float shotPower = 350f;
+    public float ejectPower = 150f;
+
     // Visual recoil runtime
     private Vector3 baseLocalPosition;
     private Quaternion baseLocalRotation;
@@ -187,8 +194,11 @@ public abstract class BaseWeapon : MonoBehaviour
     // Standard single hitscan raycast
     protected virtual void PerformRaycast()
     {
-        if (OwnerCamera == null) OwnerCamera = GetComponentInParent<Camera>();
-        if (OwnerCamera == null) return;
+        if (OwnerCamera == null)
+        {
+            Debug.LogWarning("[BaseWeapon] PerformRaycast aborted: OwnerCamera is null.");
+            return;
+        }
 
         Ray ray = new Ray(OwnerCamera.transform.position, OwnerCamera.transform.forward);
         RaycastHit hit;
@@ -197,16 +207,19 @@ public abstract class BaseWeapon : MonoBehaviour
         // Ignore the player's own layer
         int layerMask = ~LayerMask.GetMask("Player");
 
+        Debug.Log($"[BaseWeapon] Firing Raycast from {ray.origin} direction {ray.direction} range {range}");
+
         if (Physics.Raycast(ray, out hit, range, layerMask))
         {
             targetPoint = hit.point;
             // Apply damage to any enemy hit (searches the hit object and its parents).
             Abdulrahman.EnemySystem.EnemyHealth.DealDamageToEnemies(hit.collider.gameObject, damage * GlobalDamageMultiplier);
-            Debug.Log($"[BaseWeapon] Hit: {hit.collider.gameObject.name} at {hit.point}");
+            Debug.Log($"[BaseWeapon] Hit: {hit.collider.gameObject.name} at {hit.point} (Distance: {hit.distance})");
         }
         else
         {
             targetPoint = ray.GetPoint(range); // max range point if nothing hit
+            Debug.Log($"[BaseWeapon] Raycast missed. Point at range: {targetPoint}");
         }
 
         lastHitPoint = targetPoint;
@@ -255,6 +268,42 @@ public abstract class BaseWeapon : MonoBehaviour
 
         if (fireSound)
             AudioSource.PlayClipAtPoint(fireSound, muzzlePoint ? muzzlePoint.position : transform.position);
+
+        SpawnVisualBullet();
+        EjectCasing();
+    }
+
+    public virtual void SpawnVisualBullet()
+    {
+        if (bulletPrefab != null && muzzlePoint != null)
+        {
+            GameObject bullet = Instantiate(bulletPrefab, muzzlePoint.position, muzzlePoint.rotation);
+            Rigidbody rb = bullet.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                Vector3 bulletDir = (lastHitPoint - muzzlePoint.position).normalized;
+                if (bulletDir == Vector3.zero) bulletDir = muzzlePoint.forward;
+                bullet.transform.forward = bulletDir;
+                rb.linearVelocity = bulletDir * shotPower;
+            }
+            Destroy(bullet, 3f);
+        }
+    }
+
+    public virtual void EjectCasing()
+    {
+        if (casingExitLocation != null && casingPrefab != null)
+        {
+            GameObject tempCasing = Instantiate(casingPrefab, casingExitLocation.position, casingExitLocation.rotation);
+            Rigidbody rb = tempCasing.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.AddExplosionForce(Random.Range(ejectPower * 0.7f, ejectPower), 
+                    (casingExitLocation.position - casingExitLocation.right * 0.3f - casingExitLocation.up * 0.6f), 1f);
+                rb.AddTorque(new Vector3(0, Random.Range(100f, 500f), Random.Range(100f, 1000f)), ForceMode.Impulse);
+            }
+            Destroy(tempCasing, 2f);
+        }
     }
 
     protected virtual void AddRecoil()

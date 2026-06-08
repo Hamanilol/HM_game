@@ -16,10 +16,23 @@ namespace Abdulrahman.EnemySystem
             attackRange = meleeRange;
             attackRange2 = rangedRange;
             base.Start();
+            
+            if (player == null)
+            {
+                GameObject p = GameObject.FindWithTag("Player");
+                if (p != null) player = p.transform;
+            }
         }
 
         protected override void HandleAttack(float distance)
         {
+            if (player == null)
+            {
+                GameObject p = GameObject.FindWithTag("Player");
+                if (p != null) player = p.transform;
+                if (player == null) return;
+            }
+
             // The reset logic for _isAttacking is moved to UpdateAnimator to ensure it runs even if state changes
             if (_attackTimer <= 0f && !_isAttacking)
             {
@@ -27,14 +40,12 @@ namespace Abdulrahman.EnemySystem
                 {
                     _attackTimer = attackCooldown;
                     _isAttacking = true;
-                    Debug.Log("[PriestAI] Triggering Melee Attack (Distance: " + distance + ")");
                     _animator.SetTrigger("MeleeAttackTrigger");
                 }
                 else if (distance <= rangedRange)
                 {
                     _attackTimer = attackCooldown;
                     _isAttacking = true;
-                    Debug.Log("[PriestAI] Triggering Ranged Attack (Distance: " + distance + ")");
                     _animator.SetTrigger("RangedAttackTrigger");
                 }
             }
@@ -64,7 +75,7 @@ namespace Abdulrahman.EnemySystem
             _animator.SetFloat("DirectionY", localVelocity.z, 0.1f, Time.deltaTime);
         }
 
-        public void ThrowProjectile()
+        public void ThrowProjectile_Old()
         {
             if (projectilePrefab == null || projectileSpawnPoint == null) return;
  
@@ -79,5 +90,24 @@ if (projectile != null)
         {
             Debug.Log("Priest was destroyed!");
         }
-    }
+            public void ThrowProjectile()
+        {
+            Debug.Log("[PriestAI] ThrowProjectile Animation Event Received!");
+            if (projectilePrefab == null || projectileSpawnPoint == null) 
+            {
+                Debug.LogError("[PriestAI] Missing projectilePrefab or projectileSpawnPoint");
+                return;
+            }
+ 
+            GameObject proj = Instantiate(projectilePrefab, projectileSpawnPoint.position, Quaternion.identity);
+            proj.SetActive(true);
+            Projectile projectile = proj.GetComponent<Projectile>();
+            if (projectile != null)
+            {
+                projectile.Initialize(player);
+                Debug.Log("[PriestAI] Projectile initialized towards player");
+            }
+        }
+
+}
 }

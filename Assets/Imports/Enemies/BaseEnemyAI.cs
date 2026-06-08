@@ -161,9 +161,9 @@ protected bool _isAttacking = false;
             if (knockbackDir.magnitude < 0.1f) knockbackDir = transform.forward; // Fallback
             
             knockbackDir.Normalize();
-            knockbackDir.y = 0.5f; // Add vertical lift
-            
-            knockbackDir *= (knockbackForce / 10f);
+            // Bosses or heavy hitters should have significant vertical knockback (e.g. 5.0+)
+            knockbackDir.y = verticalKnockback * 2f; 
+            knockbackDir *= knockbackForce;
             
             _playerHealth.TakeDamage(damageAmount, knockbackDir);
         }

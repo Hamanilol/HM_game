@@ -141,14 +141,16 @@ namespace Abdulrahman.EnemySystem
             _hasHit = true;
             Debug.Log("[Projectile] Hit Player: " + other.gameObject.name);
 
-            // Safety check for _target before using it for knockback
-            Transform knockbackTarget = _target;
-            if (knockbackTarget == null) knockbackTarget = playerHealth.transform;
-
-            Vector3 targetPos = knockbackTarget != null ? knockbackTarget.position : other.transform.position;
-            Vector3 knockbackDir = (targetPos - transform.position).normalized;
-            knockbackDir.y = verticalKnockback / 10f;
-            knockbackDir *= knockbackForce / 10f;
+            // Use projectile movement direction for knockback
+            Vector3 knockbackDir = _direction;
+            if (knockbackDir == Vector3.zero) knockbackDir = (other.transform.position - transform.position).normalized;
+            
+            knockbackDir.y = 0;
+            knockbackDir.Normalize();
+            
+            // Apply dramatic vertical lift and magnitude for boss projectile
+            knockbackDir.y = verticalKnockback * 2f; 
+            knockbackDir *= knockbackForce;
 
             playerHealth.TakeDamage(damage, knockbackDir);
 

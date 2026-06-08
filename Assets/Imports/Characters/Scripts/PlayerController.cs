@@ -390,9 +390,8 @@ namespace Abdulrahman.PlayerSystem
             _currentTilt = Mathf.Lerp(_currentTilt, targetTiltTotal, Time.deltaTime * tiltSmoothness);
         }
 
-        public void ApplyKnockback(Vector3 direction)
+        public void ApplyKnockback(Vector3 force)
         {
-            Vector3 force = direction.normalized * 10f;
             _velocity.x += force.x;
             _velocity.z += force.z;
             _velocity.y += force.y;

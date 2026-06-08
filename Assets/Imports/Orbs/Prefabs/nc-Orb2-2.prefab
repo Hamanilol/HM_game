@@ -9797,9 +9797,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Abdulrahman.EnemySystem.Projectile
   speed: 30
-  damage: 10
-  knockbackForce: 15
-  verticalKnockback: 2
+  damage: 15
+  knockbackForce: 12
+  verticalKnockback: 0.5
   lifetime: 5
   hitEffectPrefab: {fileID: 4932088507883938021, guid: 0e5709a7ddb77924090c112cf73bb98a, type: 3}
 --- !u!1 &3934015306746896996

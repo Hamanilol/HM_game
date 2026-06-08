@@ -1,107 +1,154 @@
-
-using UnityEngine;
 using UnityEditor;
-using System.Collections;
-using Abdulrahman.InventorySystem;
+using UnityEngine;
+using System.Collections.Generic;
+using Abdulrahman.EnemySystem;
 
-[InitializeOnLoad]
-public static class PlayModeTestRunner
+namespace Unity.AI.Assistant.PlayModeTest
 {
-    static PlayModeTestRunner()
+    [InitializeOnLoad]
+    internal static class PlayModeTestRunner
     {
-        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-        // If we are already in play mode and state is waiting, run it
-        if (EditorApplication.isPlaying && SessionState.GetString("PlayModeTest.State", "Idle") == "EnteringPlayMode")
+        private const string StateKey = "PlayModeTest.State";
+        private const string ResultKey = "PlayModeTest.Result";
+        private const string ScriptPathKey = "PlayModeTest.ScriptPath";
+
+        private static readonly int WaitFrames = SessionState.GetInt("PlayModeTest.WaitFrames", 10);
+        private static readonly float TestTimeout = SessionState.GetFloat("PlayModeTest.TestTimeout", 15.0f);
+
+        private static List<string> _capturedLogs = new List<string>();
+
+        static PlayModeTestRunner()
         {
-            RunTest();
-        }
-    }
-
-    private static void OnPlayModeStateChanged(PlayModeStateChange state)
-    {
-        if (state == PlayModeStateChange.EnteredPlayMode)
-        {
-            if (SessionState.GetString("PlayModeTest.State", "Idle") == "EnteringPlayMode")
+            string state = SessionState.GetString(StateKey, "Idle");
+            switch (state)
             {
-                RunTest();
-            }
-        }
-    }
-
-    private static void RunTest()
-    {
-        SessionState.SetString("PlayModeTest.State", "InPlayMode");
-        var testRunner = new GameObject("TestRunner").AddComponent<TestRunnerBehaviour>();
-    }
-
-    private class TestRunnerBehaviour : MonoBehaviour
-    {
-        private IEnumerator Start()
-        {
-            yield return new WaitForSeconds(1f); // Wait for initialization
-
-            GameObject player = GameObject.Find("Female1");
-            if (player == null)
-            {
-                Finish("ERROR: Female1 not found");
-                yield break;
-            }
-
-            QuickSwapInventory inv = player.GetComponent<QuickSwapInventory>();
-            if (inv == null)
-            {
-                Finish("ERROR: QuickSwapInventory not found on Female1");
-                yield break;
-            }
-
-            BaseWeapon weapon = inv.GetCurrentWeapon();
-            if (weapon == null)
-            {
-                // Try waiting another second
-                yield return new WaitForSeconds(1f);
-                weapon = inv.GetCurrentWeapon();
-            }
-
-            if (weapon == null)
-            {
-                Finish("ERROR: No weapon equipped on Female1");
-                yield break;
-            }
-
-            Debug.Log("[Test] Firing weapon: " + weapon.name);
-            weapon.TryFire();
-
-            yield return null; // Wait for PlayClipAtPoint to create the object
-
-            AudioSource[] sources = Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None);
-            bool foundSound = false;
-            foreach (var s in sources)
-            {
-                if (s.clip != null && s.clip.name.Contains("mixkit-game-gun-shot"))
-                {
-                    foundSound = true;
-                    Debug.Log("[Test] Found AudioSource with gunshot sound: " + s.clip.name);
+                case "WaitingForCompile":
+                    EditorApplication.delayCall += () =>
+                    {
+                        SessionState.SetString(StateKey, "EnteringPlayMode");
+                        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+                        EditorApplication.isPlaying = true;
+                    };
                     break;
+                case "EnteringPlayMode":
+                    if (EditorApplication.isPlaying)
+                    {
+                        SessionState.SetString(StateKey, "InPlayMode");
+                        EditorApplication.update += WaitFramesThenRun;
+                    }
+                    break;
+                case "InPlayMode":
+                    if (EditorApplication.isPlaying) EditorApplication.update += WaitFramesThenRun;
+                    break;
+                case "Done":
+                    EditorApplication.delayCall += SelfDestruct;
+                    break;
+            }
+        }
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.EnteredPlayMode)
+            {
+                SessionState.SetString(StateKey, "InPlayMode");
+            }
+        }
+
+        private static int _frameCount = 0;
+        private static bool _setupDone = false;
+        private static double _testStartTime = 0;
+        private static bool _spawnedAnyProjectile = false;
+
+        private static void WaitFramesThenRun()
+        {
+            _frameCount++;
+            if (_frameCount < WaitFrames) return;
+
+            if (!_setupDone)
+            {
+                _setupDone = true;
+                Application.logMessageReceived += OnLogMessage;
+                _testStartTime = EditorApplication.timeSinceStartup;
+                Setup();
+                return;
+            }
+
+            float elapsed = (float)(EditorApplication.timeSinceStartup - _testStartTime);
+            bool complete = Tick(elapsed);
+
+            if (complete || elapsed >= TestTimeout)
+            {
+                FinishTest();
+            }
+        }
+
+        private static void Setup()
+        {
+            var priest = Object.FindAnyObjectByType<PriestAI>();
+            if (priest != null)
+            {
+                priest.rangedRange = 100f;
+                priest.attackCooldown = 1f;
+                Debug.Log("[Test] Priest found: " + priest.name);
+            }
+            var player = GameObject.FindWithTag("Player");
+            if (player != null && priest != null)
+            {
+                player.transform.position = priest.transform.position + Vector3.forward * 10f;
+            }
+        }
+
+        private static bool Tick(float elapsed)
+        {
+            var projectiles = Object.FindObjectsByType<Projectile>(FindObjectsSortMode.None);
+            if (projectiles.Length > 0)
+            {
+                _spawnedAnyProjectile = true;
+                foreach (var p in projectiles)
+                {
+                    Debug.Log("[Test] Projectile Detected: " + p.name + " at " + p.transform.position);
                 }
             }
-
-            if (foundSound)
-            {
-                Finish("SUCCESS: Gunshot sound played correctly");
-            }
-            else
-            {
-                Finish("FAILURE: Gunshot sound NOT found after firing");
-            }
+            return _spawnedAnyProjectile && elapsed > 5f;
         }
 
-        private void Finish(string result)
+        private static void FinishTest()
         {
-            SessionState.SetString("PlayModeTest.Result", result);
-            SessionState.SetString("PlayModeTest.State", "Done");
-            Debug.Log("[Test] " + result);
+            EditorApplication.update -= WaitFramesThenRun;
+            Application.logMessageReceived -= OnLogMessage;
+            SessionState.SetString(ResultKey, GetResult());
+            SessionState.SetString(StateKey, "Done");
             EditorApplication.isPlaying = false;
-            Destroy(gameObject);
+        }
+
+        private static void OnLogMessage(string message, string stackTrace, LogType type)
+        {
+            _capturedLogs.Add("[" + type + "] " + message);
+        }
+
+        private static void SelfDestruct()
+        {
+            string scriptPath = SessionState.GetString(ScriptPathKey, "");
+            if (!string.IsNullOrEmpty(scriptPath) && AssetDatabase.AssetPathExists(scriptPath))
+                AssetDatabase.DeleteAsset(scriptPath);
+            SessionState.EraseString(StateKey);
+            SessionState.EraseString(ScriptPathKey);
+        }
+
+        [System.Serializable]
+        private class TestResult
+        {
+            public bool spawned;
+            public string[] logs;
+        }
+
+        private static string GetResult()
+        {
+            return JsonUtility.ToJson(new TestResult
+            {
+                spawned = _spawnedAnyProjectile,
+                logs = _capturedLogs.ToArray()
+            });
         }
     }
 }

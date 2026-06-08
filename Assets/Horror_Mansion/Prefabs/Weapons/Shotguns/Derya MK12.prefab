@@ -1187,11 +1187,16 @@ MonoBehaviour:
   pumpDuration: 0.5
   recoilPerShot: {x: -2, y: 0.5}
   muzzlePoint: {fileID: 9013488305363728597}
-  muzzleFlashPrefab: {fileID: 0}
+  muzzleFlashPrefab: {fileID: 1782395880954752, guid: 3dd9cf2e209c504448f1c4c6835675cf, type: 3}
   fireSound: {fileID: 8300000, guid: 055fde2561bbeb441b9ecb358aa6fe95, type: 3}
   reloadSound: {fileID: 0}
   pumpSound: {fileID: 0}
   weaponAnimator: {fileID: 0}
+  bulletPrefab: {fileID: 3431183383568206178, guid: d5af5550f54c9e443b700a9241c5236f, type: 3}
+  casingPrefab: {fileID: 3625037896966406280, guid: a737d62f4ff0b854a9d767507f039686, type: 3}
+  casingExitLocation: {fileID: 5917237080071418125}
+  shotPower: 350
+  ejectPower: 150
   needsPump: 0
   visualRecoilTranslation: {x: 0, y: 0.02, z: -0.05}
   visualRecoilRotation: {x: -3, y: 0, z: 0}
