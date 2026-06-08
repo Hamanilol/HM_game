@@ -115,7 +115,7 @@ namespace Abdulrahman.PlayerSystem
                 Cursor.visible = true;
                 
                 // Stop time or other death logic
-                // Time.timeScale = 0f;
+                Time.timeScale = 0f;
             }
         }
 }
