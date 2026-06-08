@@ -56,12 +56,29 @@ public class StableFirstPersonCamera : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        headBone = characterAnimator.GetBoneTransform(HumanBodyBones.Head);
-        if (headBone == null)
-            Debug.LogError("Head bone not found!");
+        if (characterAnimator != null)
+        {
+            headBone = characterAnimator.GetBoneTransform(HumanBodyBones.Head);
+            if (headBone == null)
+            {
+                Debug.LogWarning($"Head bone not found on {characterAnimator.name}. The camera will use a fixed height fallback (1.7m). Ensure the Animator has a Humanoid Avatar and the model bones are children of the Animator.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"characterAnimator is not assigned on {gameObject.name}. The camera will use a fixed height fallback.");
+        }
 
         // Initialize yaw from current character rotation
-        yaw = characterRoot.eulerAngles.y;
+        if (characterRoot != null)
+        {
+            yaw = characterRoot.eulerAngles.y;
+        }
+        else
+        {
+            Debug.LogError($"characterRoot is not assigned on {gameObject.name}! Camera rotation will not work correctly.");
+        }
+        
         mouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 2f);
     }
 

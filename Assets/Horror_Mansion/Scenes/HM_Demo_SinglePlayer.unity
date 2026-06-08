@@ -44928,6 +44928,7 @@ MonoBehaviour:
   pauseMenuUI: {fileID: 359747690}
   settingsMenuUI: {fileID: 1950677982}
   playerHUD: {fileID: 58704619}
+  additionalHUDs: []
 --- !u!1001 &1215178858
 PrefabInstance:
   m_ObjectHideFlags: 0

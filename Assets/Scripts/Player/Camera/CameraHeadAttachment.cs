@@ -19,21 +19,16 @@ public class CameraHeadAttachment : MonoBehaviour
     {
         if (characterAnimator == null)
         {
-            Debug.LogError("Character Animator not assigned!", this);
+            Debug.LogWarning("Character Animator not assigned on " + gameObject.name + ". Camera attachment skipped.", this);
             return;
         }
 
         Transform headBone = characterAnimator.GetBoneTransform(HumanBodyBones.Head);
         if (headBone == null)
         {
-            Debug.LogError("Head bone not found! Make sure the avatar is Humanoid and properly configured.", this);
+            Debug.LogWarning("Head bone not found on " + characterAnimator.name + "! Make sure the avatar is Humanoid and properly configured. Camera will remain at its default position.", this);
             return;
         }
-
-        // Parent the camera, keeping its current world position as a base (worldPositionStays = true)
-        // This will preserve the camera's existing transform relative to the world, then we overwrite
-        // local to set the exact eye position.
-        // playerCamera.transform.SetParent(headBone, true);
 
         // Now set the local offset so the camera sits exactly at the desired eye position.
         playerCamera.transform.localPosition = eyeOffset;
