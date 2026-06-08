@@ -49,7 +49,7 @@ namespace Abdulrahman.EnemySystem
         }
 
         public void TakeDamage(float amount)
-{
+        {
             if (_currentHealth <= 0) return;
 
             _currentHealth -= amount;

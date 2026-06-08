@@ -9796,7 +9796,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51db27288c176f34da78417674688900, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Abdulrahman.EnemySystem.Projectile
-  speed: 12
+  speed: 30
   damage: 10
   knockbackForce: 15
   verticalKnockback: 2

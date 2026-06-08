@@ -76,6 +76,12 @@ namespace Abdulrahman.EnemySystem
             _target = target;
             _direction = (GetTargetPoint() - transform.position).normalized;
             
+            // Align projectile with direction
+            if (_direction != Vector3.zero)
+            {
+                transform.forward = _direction;
+            }
+
             if (_rb != null && _direction != Vector3.zero)
             {
                 _rb.linearVelocity = _direction * speed;
@@ -105,6 +111,20 @@ namespace Abdulrahman.EnemySystem
             if (other.CompareTag("Player"))
             {
                 HandleHit(other);
+            }
+            else if (!other.CompareTag("Enemy") && !other.isTrigger)
+            {
+                // Hit a wall or obstacle
+                _hasHit = true;
+                Debug.Log("[Projectile] Hit Obstacle: " + other.gameObject.name);
+                
+                if (hitEffectPrefab != null)
+                {
+                    GameObject effect = Instantiate(hitEffectPrefab, transform.position, Quaternion.identity);
+                    effect.SetActive(true);
+                    Destroy(effect, 2f);
+                }
+                Destroy(gameObject);
             }
         }
 

@@ -17,12 +17,31 @@ public class FirstPersonMouseLook : MonoBehaviour
 
     void Start()
     {
+        // Auto-assign characterRoot if missing
+        if (characterRoot == null)
+        {
+            characterRoot = transform;
+            Debug.LogWarning($"characterRoot not assigned on {gameObject.name}. Defaulting to self.", this);
+        }
+
         // If you already have the Animator, fetch the head bone automatically
         if (headBone == null)
         {
             Animator anim = GetComponent<Animator>();
-            if (anim != null)
+            // If root animator has no avatar, check children (often the model is a child)
+            if (anim == null || anim.avatar == null)
+            {
+                anim = GetComponentInChildren<Animator>();
+            }
+
+            if (anim != null && anim.avatar != null && anim.isHuman)
+            {
                 headBone = anim.GetBoneTransform(HumanBodyBones.Head);
+            }
+            else if (anim != null && anim.avatar == null)
+            {
+                Debug.LogWarning($"Animator on {anim.gameObject.name} has no Avatar. Cannot auto-assign headBone.", this);
+            }
         }
 
         // Lock cursor
@@ -36,6 +55,8 @@ public class FirstPersonMouseLook : MonoBehaviour
         {
             return;
         }
+
+        if (characterRoot == null) return;
 
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;

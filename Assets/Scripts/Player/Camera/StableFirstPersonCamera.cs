@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Abdulrahman.InventorySystem;
 
+[DefaultExecutionOrder(-100)]
 public class StableFirstPersonCamera : MonoBehaviour
 {
     [Header("Co-Op Settings")]
@@ -37,6 +38,7 @@ public class StableFirstPersonCamera : MonoBehaviour
     private float yaw = 0f;    // we'll sync to characterRoot.rotation, but keep for clarity
 
     private Transform headBone;
+    private Transform spineBone;
 
     /// <summary>
     /// Radial deadzone with rescaling. Returns Vector2.zero while the stick is
@@ -58,15 +60,37 @@ public class StableFirstPersonCamera : MonoBehaviour
 
         if (characterAnimator != null)
         {
-            headBone = characterAnimator.GetBoneTransform(HumanBodyBones.Head);
-            if (headBone == null)
+            // If the assigned animator doesn't have an avatar, check its children 
+            // (common if assigned to the root player object instead of the model)
+            if (characterAnimator.avatar == null)
             {
-                Debug.LogWarning($"Head bone not found on {characterAnimator.name}. The camera will use a fixed height fallback (1.7m). Ensure the Animator has a Humanoid Avatar and the model bones are children of the Animator.");
+                var childAnimator = characterAnimator.GetComponentInChildren<Animator>();
+                if (childAnimator != null && childAnimator.avatar != null)
+                {
+                    characterAnimator = childAnimator;
+                }
+            }
+
+            if (characterAnimator.avatar != null && characterAnimator.isHuman)
+            {
+                headBone = characterAnimator.GetBoneTransform(HumanBodyBones.Head);
+                // Also get Spine2 for upper body rotation (pitch)
+                spineBone = characterAnimator.GetBoneTransform(HumanBodyBones.Chest);
+                if (spineBone == null) spineBone = characterAnimator.GetBoneTransform(HumanBodyBones.Spine);
+            }
+            else
+            {
+                Debug.LogWarning($"Animator on {characterAnimator.name} has no Humanoid Avatar. The camera will use a fixed height fallback (1.7m).", this);
+            }
+
+            if (headBone == null && characterAnimator.avatar != null)
+            {
+                Debug.LogWarning($"Head bone not found on {characterAnimator.name}. The camera will use a fixed height fallback (1.7m). Ensure the Animator has a Humanoid Avatar and the model bones are children of the Animator.", this);
             }
         }
         else
         {
-            Debug.LogWarning($"characterAnimator is not assigned on {gameObject.name}. The camera will use a fixed height fallback.");
+            Debug.LogWarning($"characterAnimator is not assigned on {gameObject.name}. The camera will use a fixed height fallback.", this);
         }
 
         // Initialize yaw from current character rotation
@@ -82,9 +106,8 @@ public class StableFirstPersonCamera : MonoBehaviour
         mouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 2f);
     }
 
-    void LateUpdate()
+    void Update()
     {
-
         if (PauseMenu.GameIsPaused)
         {
             return;
@@ -98,30 +121,17 @@ public class StableFirstPersonCamera : MonoBehaviour
 
         if (isPlayer2)
         {
-            // Player 2: read the gamepad's RIGHT STICK via the new Input System.
-            // The old code read legacy "Joystick X/Y" (axes 3 & 4), which on a
-            // DualShock 4 over HID are the L2/R2 TRIGGERS, not the stick — that is
-            // why the triggers were controlling the look. The Gamepad abstraction
-            // maps rightStick correctly across controllers/platforms.
             Gamepad gp = Gamepad.current;
             if (gp != null)
             {
                 Vector2 look = ApplyRadialDeadzone(gp.rightStick.ReadValue(), gamepadLookDeadzone);
-                // Sticks return a sustained value, so scale by deltaTime for
-                // frame-rate-independent rotation (degrees per second).
                 float lookYSign = gamepadInvertLookY ? -1f : 1f;
                 mouseX = look.x * gamepadLookSpeed * Time.deltaTime;
                 mouseY = look.y * gamepadLookSpeed * Time.deltaTime * lookYSign;
             }
-            else
-            {
-                mouseX = 0f;
-                mouseY = 0f;
-            }
         }
         else
         {
-            // If this is player 1, read the mouse
             mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
             mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
         }
@@ -130,15 +140,33 @@ public class StableFirstPersonCamera : MonoBehaviour
         pitch -= mouseY;
         pitch  = Mathf.Clamp(pitch, pitchMin, pitchMax);
 
-        // --- Apply rotation ---
-        // Yaw: rotate only the character root around world up
-        characterRoot.rotation = Quaternion.Euler(0f, yaw, 0f);
+        // --- Apply root rotation in Update for consistency with movement ---
+        if (characterRoot != null)
+        {
+            characterRoot.rotation = Quaternion.Euler(0f, yaw, 0f);
+        }
+    }
 
-        // Camera rotation: purely from mouse input, ignoring any animation
+    void LateUpdate()
+    {
+        if (PauseMenu.GameIsPaused)
+        {
+            return;
+        }
+
+        // --- Apply rotation overrides to bones and camera ---
+        
+        // Apply Pitch to Spine/UpperBody so arms/hands move with camera
+        if (spineBone != null)
+        {
+            spineBone.localRotation = Quaternion.Euler(pitch, 0f, 0f) * spineBone.localRotation;
+        }
+
+        // Camera rotation
         cameraTransform.rotation = Quaternion.Euler(pitch, yaw, 0f);
 
         // Recoil
-        BaseWeapon currentWeapon = inventory.GetCurrentWeapon();
+        BaseWeapon currentWeapon = inventory != null ? inventory.GetCurrentWeapon() : null;
         if (currentWeapon != null)
         {
             accumulatedRecoil += currentWeapon.recoilRequest;
@@ -148,23 +176,21 @@ public class StableFirstPersonCamera : MonoBehaviour
         // Smooth recovery
         accumulatedRecoil = Vector3.Lerp(accumulatedRecoil, Vector3.zero, Time.deltaTime * recoilRecoverySpeed);
 
-        // Apply final rotation
+        // Apply final rotation to camera
         cameraTransform.rotation = Quaternion.Euler(
             pitch + accumulatedRecoil.x,
             yaw + accumulatedRecoil.y,
             0f
         );
 
-        // --- Position: follow the head bone's world position, apply eye offset in head's local space ---
+        // --- Position: follow the head bone's world position ---
         if (headBone != null)
         {
-            // Transform the local eye offset to world space using the head bone's rotation.
             Vector3 worldEyePosition = headBone.position + headBone.TransformDirection(eyeOffset);
             cameraTransform.position = worldEyePosition;
         }
         else
         {
-            // Fallback: use root position + fixed height
             cameraTransform.position = characterRoot.position + Vector3.up * 1.7f;
         }
     }

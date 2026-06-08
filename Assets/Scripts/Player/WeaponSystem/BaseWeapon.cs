@@ -57,6 +57,9 @@ public abstract class BaseWeapon : MonoBehaviour
 
     // Recoil accumulator (camera reads this)
     public Vector3 recoilRequest { get; set; }
+    
+    // Store last hit point for visual synchronization
+    protected Vector3 lastHitPoint;
 
     // Reload coroutine reference for shell-by-shell interruption
     protected Coroutine reloadCoroutine;
@@ -184,20 +187,29 @@ public abstract class BaseWeapon : MonoBehaviour
     // Standard single hitscan raycast
     protected virtual void PerformRaycast()
     {
-        Ray ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
+        if (OwnerCamera == null) OwnerCamera = GetComponentInParent<Camera>();
+        if (OwnerCamera == null) return;
+
+        Ray ray = new Ray(OwnerCamera.transform.position, OwnerCamera.transform.forward);
         RaycastHit hit;
         Vector3 targetPoint;
 
-        if (Physics.Raycast(ray, out hit, range))
+        // Ignore the player's own layer
+        int layerMask = ~LayerMask.GetMask("Player");
+
+        if (Physics.Raycast(ray, out hit, range, layerMask))
         {
             targetPoint = hit.point;
             // Apply damage to any enemy hit (searches the hit object and its parents).
             Abdulrahman.EnemySystem.EnemyHealth.DealDamageToEnemies(hit.collider.gameObject, damage * GlobalDamageMultiplier);
+            Debug.Log($"[BaseWeapon] Hit: {hit.collider.gameObject.name} at {hit.point}");
         }
         else
         {
             targetPoint = ray.GetPoint(range); // max range point if nothing hit
         }
+
+        lastHitPoint = targetPoint;
 
         // Now spawn a visual tracer from the muzzle to the targetPoint
         SpawnTracer(muzzlePoint.position, targetPoint);
@@ -235,6 +247,9 @@ public abstract class BaseWeapon : MonoBehaviour
 
     protected virtual void PlayFireEffects()
     {
+        if (weaponAnimator != null)
+            weaponAnimator.SetTrigger("Fire");
+
         if (muzzleFlashPrefab && muzzlePoint)
             Instantiate(muzzleFlashPrefab, muzzlePoint.position, muzzlePoint.rotation, muzzlePoint);
 
@@ -333,6 +348,10 @@ public abstract class BaseWeapon : MonoBehaviour
     {
         IsAiming = aiming;
     }
+
+    // Animation Event Hooks
+    public virtual void OnAnimationShoot() { }
+    public virtual void OnAnimationCasingRelease() { }
 
     protected virtual void SpawnTracer(Vector3 from, Vector3 to)
     {

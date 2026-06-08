@@ -1407,6 +1407,7 @@ GameObject:
   - component: {fileID: 5597861130683973184}
   - component: {fileID: 5308301989418531683}
   - component: {fileID: 6924203729461155247}
+  - component: {fileID: 3890335843850658727}
   m_Layer: 0
   m_Name: Priest
   m_TagString: Untagged
@@ -1444,7 +1445,7 @@ Animator:
   m_Controller: {fileID: 0}
   m_CullingMode: 1
   m_UpdateMode: 0
-  m_ApplyRootMotion: 1
+  m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
@@ -1488,7 +1489,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Abdulrahman.EnemySystem.EnemyHealth
   maxHealth: 100
-  _currentHealth: 0
+  moneyReward: 100
+  isBoss: 0
+  bossDisplayName: Boss
+  _currentHealth: 100
 --- !u!114 &6924203729461155247
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1503,18 +1507,41 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Abdulrahman.EnemySystem.PriestAI
   player: {fileID: 0}
   detectionRange: 15
-  attackRange: 2
-  attackRange2: 0
+  attackRange: 3
+  attackRange2: 15
   walkSpeed: 3.5
   runSpeed: 7
-  attackCooldown: 1.5
+  attackCooldown: 3
   damageAmount: 25
   knockbackForce: 15
   verticalKnockback: 1
   meleeRange: 3
   rangedRange: 15
   projectilePrefab: {fileID: 2351117438306767086, guid: b3eb9c9c9a52b8c4295ba57e51828b6f, type: 3}
-  projectileSpawnPoint: {fileID: 780761152700154019}
+  projectileSpawnPoint: {fileID: 5561656174735347621}
+--- !u!136 &3890335843850658727
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4363578991983522480}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.3
+  m_Height: 1.8
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
 --- !u!1 &4514782077138980834
 GameObject:
   m_ObjectHideFlags: 0

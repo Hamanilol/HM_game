@@ -12,6 +12,7 @@ namespace Abdulrahman.EnemySystem
 
         protected override void Start()
         {
+            // Ensure ranges are initialized from priest-specific settings
             attackRange = meleeRange;
             attackRange2 = rangedRange;
             base.Start();
@@ -19,36 +20,22 @@ namespace Abdulrahman.EnemySystem
 
         protected override void HandleAttack(float distance)
         {
-            if (_isAttacking)
-            {
-                AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-                // Correctly check for RA (Ranged Attack) and MeleeAttack state names
-                bool inAttack = stateInfo.IsName("MeleeAttack") || stateInfo.IsName("RA");
-                if (!inAttack) 
-                {
-                    _isAttacking = false;
-                    Debug.Log("[PriestAI] Attack finished, returning to movement.");
-                }
-            }
-
+            // The reset logic for _isAttacking is moved to UpdateAnimator to ensure it runs even if state changes
             if (_attackTimer <= 0f && !_isAttacking)
             {
-                _attackTimer = attackCooldown;
-                _isAttacking = true;
-
                 if (distance <= meleeRange)
                 {
+                    _attackTimer = attackCooldown;
+                    _isAttacking = true;
                     Debug.Log("[PriestAI] Triggering Melee Attack (Distance: " + distance + ")");
                     _animator.SetTrigger("MeleeAttackTrigger");
                 }
                 else if (distance <= rangedRange)
                 {
+                    _attackTimer = attackCooldown;
+                    _isAttacking = true;
                     Debug.Log("[PriestAI] Triggering Ranged Attack (Distance: " + distance + ")");
                     _animator.SetTrigger("RangedAttackTrigger");
-                }
-                else
-                {
-                    _isAttacking = false;
                 }
             }
         }
@@ -56,6 +43,21 @@ namespace Abdulrahman.EnemySystem
         protected override void UpdateAnimator()
         {
             base.UpdateAnimator();
+
+            if (_isAttacking)
+            {
+                AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+                bool inAttack = stateInfo.IsName("MeleeAttack") || stateInfo.IsName("RA");
+                bool inTransition = _animator.IsInTransition(0);
+
+                // Only reset if we are NOT in an attack state AND not transitioning into one
+                // This ensures the animation plays fully before allowing another attack trigger
+                if (!inAttack && !inTransition)
+                {
+                    _isAttacking = false;
+                    // Debug.Log("[PriestAI] Attack animation finished, ready for next.");
+                }
+            }
 
             Vector3 localVelocity = transform.InverseTransformDirection(_agent.velocity);
             _animator.SetFloat("DirectionX", localVelocity.x, 0.1f, Time.deltaTime);

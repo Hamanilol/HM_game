@@ -59,7 +59,27 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4210100720165400533, guid: 87e308cb23eea97419b3c2623d8bb3fa, type: 3}
       insertIndex: -1
       addedObject: {fileID: 80243316157272105}
+    - targetCorrespondingSourceObject: {fileID: 4634820778430586416, guid: 87e308cb23eea97419b3c2623d8bb3fa, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8436538144686427259}
   m_SourcePrefab: {fileID: 100100000, guid: 87e308cb23eea97419b3c2623d8bb3fa, type: 3}
+--- !u!1 &4442692468299322014 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4634820778430586416, guid: 87e308cb23eea97419b3c2623d8bb3fa, type: 3}
+  m_PrefabInstance: {fileID: 9076351612586069166}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8436538144686427259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4442692468299322014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11f3f422eeb6ca24ba3c423f63ef87c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Abdulrahman.PlayerSystem.WeaponAnimationEventBridge
 --- !u!4 &4442692468299747002 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4634820778430546452, guid: 87e308cb23eea97419b3c2623d8bb3fa, type: 3}
@@ -109,10 +129,20 @@ MonoBehaviour:
   fireSound: {fileID: 0}
   reloadSound: {fileID: 0}
   pumpSound: {fileID: 0}
-  weaponAnimator: {fileID: 0}
+  weaponAnimator: {fileID: 6881164742809889519}
   needsPump: 0
+  visualRecoilTranslation: {x: 0, y: 0.02, z: -0.05}
+  visualRecoilRotation: {x: -3, y: 0, z: 0}
+  visualRecoilRandomHorizontal: 0.01
+  visualRecoilSpringFrequency: 10
+  visualRecoilSpringDamping: 0.4
   bulletPrefab: {fileID: 1122964723992546, guid: 674adf642abf5614aae2995443c8250f, type: 3}
   casingPrefab: {fileID: 4362657251999731927, guid: 4cb20e8abae957146a8b78e670d3fe74, type: 3}
   casingExitLocation: {fileID: 4442692468299747002}
   shotPower: 500
   ejectPower: 150
+--- !u!95 &6881164742809889519 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 2489192430752802369, guid: 87e308cb23eea97419b3c2623d8bb3fa, type: 3}
+  m_PrefabInstance: {fileID: 9076351612586069166}
+  m_PrefabAsset: {fileID: 0}

@@ -32,6 +32,10 @@ namespace Abdulrahman.PlayerSystem
         [Tooltip("The Transform of the camera, usually a child of the player object.")]
         public Transform playerCamera;
 
+        [Header("CAMERA CONTROL")]
+        [Tooltip("If true, this script will handle camera rotation and head bob. Disable if using a separate camera script.")]
+        public bool useInternalCameraLogic = true;
+
         [Header("MOVEMENT SETTINGS")]
         public float speed = 6f;
         public float runSpeed = 9f;
@@ -155,12 +159,16 @@ namespace Abdulrahman.PlayerSystem
             HandleCrouchLogic();
             UpdateMovementState();
             HandleMovement();
-            HandleHeightAndCamera();
-            HandleCameraControl();
-            HandleCameraTilt();
-            HandleFovChange();
 
-            if (enableHeadBob) HandleHeadBob();
+            if (useInternalCameraLogic)
+            {
+                HandleHeightAndCamera();
+                HandleCameraControl();
+                HandleCameraTilt();
+                HandleFovChange();
+                if (enableHeadBob) HandleHeadBob();
+            }
+
             if (bodyAnimator != null) UpdateAnimator();
             HandleStamina();
         }
@@ -319,11 +327,12 @@ namespace Abdulrahman.PlayerSystem
             if (standingHeightMarker != null)
                 standingHeightMarker.transform.position = new Vector3(transform.position.x, transform.position.y + _markerHeightOffset, transform.position.z);
 
-            controller.Move(moveInput * _currentMovementSpeed * Time.deltaTime);
             _velocity.y += gravity * Time.deltaTime;
             _velocity.x = Mathf.Lerp(_velocity.x, 0f, Time.deltaTime * 10f);
             _velocity.z = Mathf.Lerp(_velocity.z, 0f, Time.deltaTime * 10f);
-            controller.Move(_velocity * Time.deltaTime);
+
+            Vector3 combinedMove = (moveInput * _currentMovementSpeed) + _velocity;
+            controller.Move(combinedMove * Time.deltaTime);
         }
 
         private void HandleCrouchLogic()
@@ -383,9 +392,10 @@ namespace Abdulrahman.PlayerSystem
 
         public void ApplyKnockback(Vector3 direction)
         {
-            _velocity.x += direction.x * 40f;
-            _velocity.z += direction.z * 40f;
-            _velocity.y += direction.y * 40f;
+            Vector3 force = direction.normalized * 10f;
+            _velocity.x += force.x;
+            _velocity.z += force.z;
+            _velocity.y += force.y;
         }
 
         /// <summary>

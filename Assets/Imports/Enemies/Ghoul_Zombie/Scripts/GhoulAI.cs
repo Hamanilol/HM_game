@@ -9,8 +9,13 @@ namespace Abdulrahman.EnemySystem
             if (_isAttacking)
             {
                 AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-                if (!stateInfo.IsName("Attack1") && !stateInfo.IsName("Attack2"))
+                bool inAttackState = stateInfo.IsName("Attack1") || stateInfo.IsName("Attack2");
+                bool inTransition = _animator.IsInTransition(0);
+
+                if (!inAttackState && !inTransition)
+                {
                     _isAttacking = false;
+                }
             }
 
             if (_attackTimer <= 0f && !_isAttacking)
