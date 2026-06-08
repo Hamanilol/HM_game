@@ -1172,7 +1172,7 @@ MonoBehaviour:
   maxAmmo: 30
   currentAmmo: 30
   reserveAmmo: 90
-  fireRate: 0.1
+  fireRate: 0.05
   isAutomatic: 1
   damage: 25
   range: 100

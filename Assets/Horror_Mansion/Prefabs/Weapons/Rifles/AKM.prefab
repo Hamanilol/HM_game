@@ -461,7 +461,7 @@ MonoBehaviour:
   spreadAngle: 5
   isPumpAction: 0
   pumpDuration: 0.5
-  recoilPerShot: {x: -2, y: 0.5}
+  recoilPerShot: {x: -2, y: 1}
   muzzlePoint: {fileID: 1885779128311959122}
   muzzleFlashPrefab: {fileID: 0}
   fireSound: {fileID: 8300000, guid: 828d23867fb400a40a42b7e1088df444, type: 3}
@@ -474,9 +474,9 @@ MonoBehaviour:
   shotPower: 350
   ejectPower: 150
   needsPump: 0
-  visualRecoilTranslation: {x: 0, y: 0.02, z: -0.05}
-  visualRecoilRotation: {x: -3, y: 0, z: 0}
-  visualRecoilRandomHorizontal: 0.01
+  visualRecoilTranslation: {x: 0, y: 0.02, z: -0.08}
+  visualRecoilRotation: {x: -3, y: 0.05, z: 0}
+  visualRecoilRandomHorizontal: 0.04
   visualRecoilSpringFrequency: 10
   visualRecoilSpringDamping: 0.4
 --- !u!1 &2651670557470964910

@@ -81789,6 +81789,7 @@ MonoBehaviour:
   gamepadLookDeadzone: 0.2
   controller: {fileID: 5663993384512318114}
   playerCamera: {fileID: 255325968600918099}
+  useInternalCameraLogic: 1
   speed: 6
   runSpeed: 9
   jumpHeight: 1.2
@@ -84268,6 +84269,9 @@ MonoBehaviour:
   damageVignette: {fileID: 0}
   vignetteMaxAlpha: 0.6
   vignetteFadeSpeed: 2
+  pulseSpeed: 10
+  lowHealthThreshold: 0.25
+  lowHealthPulseMaxAlpha: 0.3
   deathScreen: {fileID: 1993773787}
 --- !u!1001 &2581148123702628234
 PrefabInstance:
@@ -87579,11 +87583,11 @@ MonoBehaviour:
   slotCount: 5
   characterAnimator: {fileID: 0}
   itemPrefabs:
-  - {fileID: 814340701941695064, guid: 65d4bfa286fab474b943deee58acedb1, type: 3}
-  - {fileID: 7479764186849181076, guid: 77426db18e9d00c4f91c492985ce7ab0, type: 3}
-  - {fileID: 630341572420416615, guid: f96b66c4eebeeda4a8394ec9b9b6b395, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 2558141238811818592, guid: 68587b2d9c60944489560cf05cdd1aaf, type: 3}
+  - {fileID: 5943543978086211253, guid: 6289d31ac64ccb743a9e2886f210a9b9, type: 3}
+  - {fileID: 3561677274960398221, guid: e92ab41c1fd8cfb4596141c48ed76e7d, type: 3}
+  - {fileID: 4185518912306324553, guid: 34d9918439c82da478947f5832aed8b9, type: 3}
+  - {fileID: 7660624483632653708, guid: d7791594d53f2a9489a02a65171f508c, type: 3}
 --- !u!4 &4306495090546948836 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6863345796112242151, guid: c25b12c1bc973b5439b47b495deee827, type: 3}
