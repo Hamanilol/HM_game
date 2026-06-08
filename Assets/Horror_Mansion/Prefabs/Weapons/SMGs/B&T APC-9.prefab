@@ -1173,7 +1173,7 @@ MonoBehaviour:
   maxAmmo: 33
   currentAmmo: 33
   reserveAmmo: 90
-  fireRate: 0.1
+  fireRate: 0.05
   isAutomatic: 1
   damage: 25
   range: 100
@@ -1188,14 +1188,19 @@ MonoBehaviour:
   recoilPerShot: {x: -2, y: 0.5}
   muzzlePoint: {fileID: 7532490323753872956}
   muzzleFlashPrefab: {fileID: 0}
-  fireSound: {fileID: 8300000, guid: 055fde2561bbeb441b9ecb358aa6fe95, type: 3}
+  fireSound: {fileID: 8300000, guid: ebf8d284f78f8fa4d9f78c2105bc93ca, type: 3}
   reloadSound: {fileID: 0}
   pumpSound: {fileID: 0}
   weaponAnimator: {fileID: 0}
+  bulletPrefab: {fileID: 0}
+  casingPrefab: {fileID: 0}
+  casingExitLocation: {fileID: 0}
+  shotPower: 350
+  ejectPower: 150
   needsPump: 0
   visualRecoilTranslation: {x: 0, y: 0.02, z: -0.05}
   visualRecoilRotation: {x: -3, y: 0, z: 0}
-  visualRecoilRandomHorizontal: 0.01
+  visualRecoilRandomHorizontal: 0.04
   visualRecoilSpringFrequency: 10
   visualRecoilSpringDamping: 0.4
 --- !u!1 &7926486204361689541
