@@ -7,6 +7,7 @@ public class MainMenuController : MonoBehaviour
     [Header("Scene Names")]
 
     [SerializeField] private string characterSelectScene = "CharacterSelect";
+    [SerializeField] private string singlePlayerScene = "HM_Demo_SinglePlayer";
 
     [Header("Settings Menu")]
 
@@ -79,7 +80,9 @@ public class MainMenuController : MonoBehaviour
 
     void LoadSinglePlayerScene()
     {
-        SceneManager.LoadScene(characterSelectScene);
+        // First-person single player has no visible character model, so we skip
+        // the character-select screen entirely and load straight into the game.
+        SceneManager.LoadScene(singlePlayerScene);
     }
 
     // =========================

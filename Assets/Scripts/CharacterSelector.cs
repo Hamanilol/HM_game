@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class CharacterSelector : MonoBehaviour
 {
@@ -10,6 +11,22 @@ public class CharacterSelector : MonoBehaviour
     public GameObject[] characters;
 
     private int currentCharacterIndex = 0;
+
+    // =========================
+    // CO-OP TWO-STEP SELECTION
+    // =========================
+
+    [Header("Co-op Selection")]
+    [Tooltip("Optional label that shows whose turn it is to choose (e.g. 'Player 1 - Choose your character').")]
+    public TMP_Text turnLabel;
+
+    // Which player is currently choosing in co-op (1 or 2).
+    private int currentPlayerTurn = 1;
+
+    // PlayerPrefs keys
+    private const string KeyP1 = "Player1Character";
+    private const string KeyP2 = "Player2Character";
+    private const string KeyLegacy = "SelectedCharacter";
 
     // =========================
     // AUDIO SYSTEM
@@ -42,6 +59,25 @@ public class CharacterSelector : MonoBehaviour
             characters[currentCharacterIndex].SetActive(true);
             Debug.Log("[CharacterSelector] Initialized with: " + characters[currentCharacterIndex].name);
         }
+
+        currentPlayerTurn = 1;
+        UpdateTurnLabel();
+    }
+
+    // =========================
+    // TURN LABEL
+    // =========================
+
+    private void UpdateTurnLabel()
+    {
+        if (turnLabel == null) return;
+
+        // Only meaningful in co-op; single player skips this scene entirely.
+        string mode = PlayerPrefs.GetString("GameMode", "Multiplayer");
+        if (mode == "SinglePlayer")
+            turnLabel.text = "Choose your character";
+        else
+            turnLabel.text = "Player " + currentPlayerTurn + " - Choose your character";
     }
 
     // =========================
@@ -113,15 +149,58 @@ public class CharacterSelector : MonoBehaviour
     public void PlayGame()
     {
         // PLAY CLICK SOUND
-        audioSource.PlayOneShot(clickSound);
+        if (audioSource != null && clickSound != null)
+            audioSource.PlayOneShot(clickSound);
 
-        // SAVE CHARACTER
-        PlayerPrefs.SetInt("SelectedCharacter", currentCharacterIndex);
-        PlayerPrefs.Save();
+        string gameMode = PlayerPrefs.GetString("GameMode", "Multiplayer");
 
-        // WAIT BEFORE LOADING
-        Invoke(nameof(LoadGameScene), 0.7f);
-}
+        // SINGLE PLAYER (legacy safety): this scene is normally skipped for single
+        // player, but if it is reached, behave like the old single-character flow.
+        if (gameMode == "SinglePlayer")
+        {
+            PlayerPrefs.SetInt(KeyLegacy, currentCharacterIndex);
+            PlayerPrefs.Save();
+            Invoke(nameof(LoadGameScene), 0.7f);
+            return;
+        }
+
+        // CO-OP: first Player 1 chooses, then Player 2 chooses, then load.
+        if (currentPlayerTurn == 1)
+        {
+            PlayerPrefs.SetInt(KeyP1, currentCharacterIndex);
+            PlayerPrefs.Save();
+            Debug.Log("[CharacterSelector] Player 1 chose index " + currentCharacterIndex);
+
+            // Hand over to Player 2: reset the carousel to the first character.
+            currentPlayerTurn = 2;
+            ResetSelectionForNextPlayer();
+            UpdateTurnLabel();
+        }
+        else
+        {
+            PlayerPrefs.SetInt(KeyP2, currentCharacterIndex);
+            PlayerPrefs.Save();
+            Debug.Log("[CharacterSelector] Player 2 chose index " + currentCharacterIndex);
+
+            Invoke(nameof(LoadGameScene), 0.7f);
+        }
+    }
+
+    // =========================
+    // RESET CAROUSEL FOR NEXT PLAYER
+    // =========================
+
+    private void ResetSelectionForNextPlayer()
+    {
+        // Hide the character Player 1 left visible.
+        if (characters.Length > 0 && characters[currentCharacterIndex] != null)
+            characters[currentCharacterIndex].SetActive(false);
+
+        currentCharacterIndex = 0;
+
+        if (characters.Length > 0 && characters[currentCharacterIndex] != null)
+            characters[currentCharacterIndex].SetActive(true);
+    }
 
     // =========================
     // LOAD GAME SCENE
