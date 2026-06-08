@@ -17,6 +17,7 @@ public class MainMenuController : MonoBehaviour
 
     [SerializeField] private VideoPlayer videoPlayer;
     [SerializeField] private GameObject mainMenu;
+    [SerializeField] private GameObject background;
 
     [Header("Audio Setup")]
 
@@ -158,6 +159,12 @@ public class MainMenuController : MonoBehaviour
         // HIDE MENU
         mainMenu.SetActive(false);
 
+        // HIDE BACKGROUND
+        if (background != null)
+        {
+            background.SetActive(false);
+        }
+
         // PLAY VIDEO
         videoPlayer.Play();
 
@@ -169,6 +176,12 @@ public class MainMenuController : MonoBehaviour
     {
         // STOP VIDEO
         videoPlayer.Stop();
+
+        // SHOW BACKGROUND
+        if (background != null)
+        {
+            background.SetActive(true);
+        }
 
         // SHOW MENU AGAIN
         mainMenu.SetActive(true);
