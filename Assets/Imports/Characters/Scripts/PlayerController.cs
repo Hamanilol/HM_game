@@ -83,6 +83,7 @@ namespace Abdulrahman.PlayerSystem
         public bool enableRunFov = true;
         public float normalFov = 60f;
         public float runFov = 70f;
+        public float aimFov = 40f;
         public float fovChangeSpeed = 8f;
 
         [Header("STAMINA SETTINGS")]
@@ -92,8 +93,14 @@ namespace Abdulrahman.PlayerSystem
         private float _currentStamina;
         private bool _canSprint = true;
 
+        [Header("MOVEMENT FEEL")]
+        public float movementAcceleration = 15f;
+        public float movementDeceleration = 12f;
+        private float _smoothHorizontalInput;
+        private float _smoothVerticalInput;
+
         [Header("STANDING DETECTION & GROUND CHECK")]
-        public GameObject standingHeightMarker;
+public GameObject standingHeightMarker;
         public float standingCheckRadius = 0.2f;
         public LayerMask obstacleLayerMask = ~0;
         public float minStandingClearance = 0.01f;
@@ -125,6 +132,8 @@ namespace Abdulrahman.PlayerSystem
         private bool _crouchInput;
         private bool _jumpInput;
 
+        private bool _interactInput;
+
         public enum MovementState { Walking, Running, Crouching, Jumping }
 
         public bool IsGrounded => _isGrounded;
@@ -132,6 +141,8 @@ namespace Abdulrahman.PlayerSystem
         public MovementState CurrentState => _currentMovementState;
         public float CurrentStamina => _currentStamina;
         public float MaxStamina => maxStamina;
+        public bool InteractInput => _interactInput;
+        public GameObject interactPrompt; // UI to show when near interactive objects
 
         private void Start()
         {
@@ -190,11 +201,12 @@ namespace Abdulrahman.PlayerSystem
                 _runInput = Input.GetKey(runKey);
                 _crouchInput = Input.GetKey(crouchKey);
                 _jumpInput = Input.GetButtonDown("Jump");
+                _interactInput = Input.GetKeyDown(KeyCode.E);
             }
             else
             {
                 // PLAYER 2: New Input System gamepad (e.g. DualShock 4 / PS4 controller).
-                // Reading via the Gamepad abstraction avoids platform-specific legacy
+// Reading via the Gamepad abstraction avoids platform-specific legacy
                 // axis-number issues (DS4 right-stick Y is not the same axis on every OS).
                 Gamepad gp = Gamepad.current;
                 if (gp != null)
@@ -218,6 +230,7 @@ namespace Abdulrahman.PlayerSystem
                     _runInput = gp.leftStickButton.isPressed;        // L3 = sprint (hold)
                     _crouchInput = gp.buttonEast.isPressed;          // Circle = crouch (hold)
                     _jumpInput = gp.buttonSouth.wasPressedThisFrame; // Cross = jump
+                    _interactInput = gp.buttonWest.wasPressedThisFrame; // Square/X = interact
                 }
                 else
                 {
@@ -225,9 +238,9 @@ namespace Abdulrahman.PlayerSystem
                     _horizontalInput = _verticalInput = 0f;
                     _horizontalRawInput = _verticalRawInput = 0f;
                     _lookInputX = _lookInputY = 0f;
-                    _runInput = _crouchInput = _jumpInput = false;
+                    _runInput = _crouchInput = _jumpInput = _interactInput = false;
                 }
-            }
+}
         }
 
         /// <summary>
@@ -314,7 +327,20 @@ namespace Abdulrahman.PlayerSystem
 
         private void HandleMovement()
         {
-            Vector3 moveInput = transform.right * _horizontalInput + transform.forward * _verticalInput;
+            // Get camera-relative directions
+            Vector3 forward = playerCamera.forward;
+            Vector3 right = playerCamera.right;
+
+            // Flatten directions to the horizontal plane
+            forward.y = 0;
+            right.y = 0;
+            forward.Normalize();
+            right.Normalize();
+
+            // Calculate movement vector based on raw inputs for maximum responsiveness
+            Vector3 moveInput = forward * _verticalInput + right * _horizontalInput;
+            
+            // Limit magnitude to 1 for diagonal movement consistency
             if (moveInput.magnitude > 1f) moveInput.Normalize();
 
             if (_jumpInput && _isGrounded && !_isCrouching)
@@ -418,9 +444,20 @@ namespace Abdulrahman.PlayerSystem
         private void HandleFovChange()
         {
             if (!enableRunFov || playerCamera.GetComponent<Camera>() == null) return;
+            
             bool isActuallyRunning = _runInput && _verticalInput > 0.1f;
+            
+            // Get aiming state from QuickSwapInventory
+            bool isAiming = false;
+            var inv = GetComponent<Abdulrahman.InventorySystem.QuickSwapInventory>();
+            if (inv != null && inv.GetCurrentWeapon() != null)
+            {
+                isAiming = inv.GetCurrentWeapon().IsAiming;
+            }
+
             Camera cam = playerCamera.GetComponent<Camera>();
-            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, isActuallyRunning ? runFov : normalFov, Time.deltaTime * fovChangeSpeed);
+            float targetFov = isAiming ? aimFov : (isActuallyRunning ? runFov : normalFov);
+            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFov, Time.deltaTime * fovChangeSpeed);
         }
 
         private void HandleHeadBob()

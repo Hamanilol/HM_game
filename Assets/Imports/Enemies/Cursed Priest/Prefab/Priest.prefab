@@ -1488,10 +1488,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7e1351fa63558a4baf1cb855c3dcc30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Abdulrahman.EnemySystem.EnemyHealth
-  maxHealth: 100
+  maxHealth: 1000
   moneyReward: 100
-  isBoss: 0
-  bossDisplayName: Boss
+  isBoss: 1
+  bossDisplayName: THE CURSED PRIEST
   _currentHealth: 100
 --- !u!114 &6924203729461155247
 MonoBehaviour:
@@ -1506,7 +1506,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Abdulrahman.EnemySystem.PriestAI
   player: {fileID: 0}
-  detectionRange: 15
+  detectionRange: 30
   attackRange: 3
   attackRange2: 15
   walkSpeed: 3.5
@@ -1516,7 +1516,7 @@ MonoBehaviour:
   knockbackForce: 15
   verticalKnockback: 1
   meleeRange: 3
-  rangedRange: 15
+  rangedRange: 25
   projectilePrefab: {fileID: 2351117438306767086, guid: b3eb9c9c9a52b8c4295ba57e51828b6f, type: 3}
   projectileSpawnPoint: {fileID: 5561656174735347621}
 --- !u!136 &3890335843850658727

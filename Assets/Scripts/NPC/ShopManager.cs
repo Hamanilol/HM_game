@@ -33,15 +33,29 @@ namespace Abdulrahman.NPC
             }
         }
 
-        public void OpenShop()
+        public void OpenShop(PlayerController player)
         {
             if (shopUI != null)
             {
                 shopUI.SetActive(true);
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
-                FindPlayer();
+                
+                if (player != null)
+                {
+                    _playerHealth = player.GetComponent<PlayerHealth>();
+                    _playerController = player;
+                }
+                else
+                {
+                    FindPlayer();
+                }
             }
+        }
+
+        public void OpenShop()
+        {
+            OpenShop(null);
         }
 
         public void CloseShop()
@@ -74,7 +88,7 @@ namespace Abdulrahman.NPC
 
         public void BuyHeal100HP()
         {
-            if (TrySpend(60))
+            if (TrySpend(160))
             {
                 _playerHealth.Heal(100f);
                 Debug.Log("Bought 100 HP Heal");

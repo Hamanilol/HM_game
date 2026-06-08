@@ -1,70 +1,72 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class Door : MonoBehaviour
 {
+    private bool _inTrigger;
+    private bool _isOpen;
+    
+    [Header("Settings")]
+    public float smooth = 4.0f;
+    public float doorOpenAngle = 90.0f;
+    public KeyCode interactKey = KeyCode.E;
+    
+    [Header("UI Feedback")]
+    public MonoBehaviour interactionText; // Supports legacy Text or TMP_Text
 
-    bool trig, open;//trig-проверка входа выхода в триггер(игрок должен быть с тегом Player) open-закрыть и открыть дверь
-    public float smooth = 2.0f;//скорость вращения
-    public float DoorOpenAngle = 90.0f;//угол вращения 
-    private Vector3 defaulRot;
-    private Vector3 openRot;
-    public Text txt;//text 
-    // Start is called before the first frame update
-    void Start()
+    private Vector3 _defaultRot;
+    private Vector3 _openRot;
+
+    private void Start()
     {
-        defaulRot = transform.eulerAngles;
-        openRot = new Vector3(defaulRot.x, defaulRot.y + DoorOpenAngle, defaulRot.z);
+        _defaultRot = transform.eulerAngles;
+        // Adjust based on typical rotation pivots. 
+        // Note: Using localEulerAngles is usually safer for child objects, but let's stick to world if that's how it was.
+        _openRot = new Vector3(_defaultRot.x, _defaultRot.y + doorOpenAngle, _defaultRot.z);
+        SetText("");
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        if (open)//открыть
+        // Smooth rotation
+        Vector3 targetRot = _isOpen ? _openRot : _defaultRot;
+        transform.eulerAngles = Vector3.Lerp(transform.eulerAngles, targetRot, Time.deltaTime * smooth);
+
+        // Interaction
+        if (_inTrigger)
         {
-            transform.eulerAngles = Vector3.Slerp(transform.eulerAngles, openRot, Time.deltaTime * smooth);
-        }
-        else//закрыть
-        {
-            transform.eulerAngles = Vector3.Slerp(transform.eulerAngles, defaulRot, Time.deltaTime * smooth);
-        }
-        if (Input.GetKeyDown(KeyCode.E) && trig)
-        {
-            open = !open;
-        }
-        if (trig)
-        {
-            if (open)
+            if (Input.GetKeyDown(interactKey))
             {
-                txt.text = "Close E";
+                _isOpen = !_isOpen;
             }
-            else
-            {
-                txt.text = "Open E";
-            }
+
+            SetText(_isOpen ? "Close " + interactKey : "Open " + interactKey);
         }
     }
-    private void OnTriggerEnter(Collider coll)//вход и выход в\из  триггера 
+
+    private void SetText(string msg)
     {
-        if (coll.tag == "Player")
+        if (interactionText == null) return;
+
+        if (interactionText is Text legacy) legacy.text = msg;
+        else if (interactionText is TMP_Text tmp) tmp.text = msg;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
         {
-            if (!open)
-            {
-                txt.text = "Close E ";
-            }
-            else
-            {
-                txt.text = "Open E";
-            }
-            trig = true;
+            _inTrigger = true;
         }
     }
-    private void OnTriggerExit(Collider coll)//вход и выход в\из  триггера 
+
+    private void OnTriggerExit(Collider other)
     {
-        if (coll.tag == "Player")
+        if (other.CompareTag("Player"))
         {
-            txt.text = " ";
-            trig = false;
+            _inTrigger = false;
+            SetText("");
         }
     }
 }

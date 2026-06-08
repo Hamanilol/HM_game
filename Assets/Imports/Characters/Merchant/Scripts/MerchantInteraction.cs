@@ -1,79 +1,78 @@
 using UnityEngine;
+using System.Collections.Generic;
+using Abdulrahman.PlayerSystem;
 
 namespace Abdulrahman.NPC
 {
     public class MerchantInteraction : MonoBehaviour
     {
         public float interactionDistance = 5f;
-        public string playerTag = "Player";
         public string animatorParameter = "IsPlayerClose";
-        public GameObject interactionUI;
 
         [Header("Store")]
-        [Tooltip("The StoreUI to open when the player presses E nearby. If left empty it will be found automatically.")]
         public StoreUI storeUI;
-        public KeyCode interactKey = KeyCode.E;
 
         private Animator _animator;
-        private Transform _player;
-        private bool _isClose = false;
+        private PlayerController[] _players;
+        private bool _anyoneClose = false;
 
         private void Start()
         {
             _animator = GetComponent<Animator>();
-            if (interactionUI != null) interactionUI.SetActive(false);
-
             if (storeUI == null) storeUI = FindFirstObjectByType<StoreUI>(FindObjectsInactive.Include);
-
-            FindPlayer();
+            
+            RefreshPlayers();
         }
 
-        private void FindPlayer()
+        private void RefreshPlayers()
         {
-            GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
-            if (playerObj != null)
-            {
-                _player = playerObj.transform;
-            }
+            _players = Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
         }
 
         private void Update()
         {
-            if (_player == null)
+            if (_players == null || _players.Length == 0)
             {
-                FindPlayer();
-                if (_player == null) return;
+                RefreshPlayers();
+                if (_players == null || _players.Length == 0) return;
             }
 
-            float distance = Vector3.Distance(transform.position, _player.position);
-            _isClose = distance <= interactionDistance;
+            _anyoneClose = false;
+
+            foreach (var player in _players)
+            {
+                if (player == null) continue;
+
+                float distance = Vector3.Distance(transform.position, player.transform.position);
+                bool isClose = distance <= interactionDistance;
+
+                if (isClose) _anyoneClose = true;
+
+                // Handle player-specific prompt
+                if (player.interactPrompt != null)
+                {
+                    // Hide prompt if store is already open (assuming shared store for now, or check per player if storeUI supports it)
+                    bool storeOpen = storeUI != null && storeUI.storePanel != null && storeUI.storePanel.activeSelf;
+                    player.interactPrompt.SetActive(isClose && !storeOpen);
+                }
+
+                // Handle interaction
+                if (isClose && player.InteractInput)
+                {
+                    if (storeUI != null)
+                    {
+                        storeUI.Open();
+                    }
+                    else if (ShopManager.Instance != null)
+                    {
+                        ShopManager.Instance.OpenShop(player);
+                    }
+                }
+}
 
             if (_animator != null)
             {
-                _animator.SetBool(animatorParameter, _isClose);
-            }
-
-            bool storeOpen = storeUI != null && storeUI.storePanel != null && storeUI.storePanel.activeSelf;
-
-            if (interactionUI != null)
-            {
-                interactionUI.SetActive(_isClose && !storeOpen);
-            }
-
-            if (_isClose && Input.GetKeyDown(interactKey))
-            {
-                if (storeUI != null)
-                {
-                    storeUI.Open();
-                }
-                else if (ShopManager.Instance != null)
-                {
-                    ShopManager.Instance.OpenShop();
-                }
-                else
-                {
-                    Debug.LogWarning("[MerchantInteraction] No StoreUI or ShopManager available to open.");
-                }
+                _animator.SetBool(animatorParameter, _anyoneClose);
             }
         }
 

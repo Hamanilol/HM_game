@@ -124,8 +124,8 @@ namespace Abdulrahman.InventorySystem
             }
             if (_currentWeapon != null)
                 UpdateWeaponPose();
-            else
-                characterAnimator?.SetInteger("WeaponPose", 0);
+            else if (characterAnimator != null)
+                characterAnimator.SetInteger("WeaponPose", 0);
         }
 
         private void UpdateWeaponPose()
