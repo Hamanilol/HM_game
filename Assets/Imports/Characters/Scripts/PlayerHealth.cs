@@ -18,6 +18,9 @@ namespace Abdulrahman.PlayerSystem
         public Image damageVignette;
         public float vignetteMaxAlpha = 0.6f;
         public float vignetteFadeSpeed = 2f;
+        public float pulseSpeed = 10f;
+        public float lowHealthThreshold = 0.25f;
+        public float lowHealthPulseMaxAlpha = 0.3f;
         private float _targetAlpha = 0f;
 
         private PlayerController _playerController;
@@ -30,6 +33,7 @@ namespace Abdulrahman.PlayerSystem
             if (damageVignette != null)
             {
                 Color c = damageVignette.color;
+                c.r = 1f; c.g = 0f; c.b = 0f; // Ensure it's red
                 c.a = 0f;
                 damageVignette.color = c;
             }
@@ -46,17 +50,38 @@ namespace Abdulrahman.PlayerSystem
         {
             if (damageVignette == null) return;
 
-            float lowHealthAlpha = 1f - (_currentHealth / maxHealth);
-            lowHealthAlpha = Mathf.Clamp(lowHealthAlpha * vignetteMaxAlpha, 0f, vignetteMaxAlpha);
+            float healthPercent = _currentHealth / maxHealth;
+            float lowHealthAlpha = 0f;
+
+            // Handle pulsing when health is low (25% or lower)
+            if (healthPercent <= lowHealthThreshold && _currentHealth > 0)
+            {
+                // Pulsing between 0 and lowHealthPulseMaxAlpha (30%)
+                float pulse = (Mathf.Sin(Time.time * pulseSpeed) + 1f) / 2f; // 0 to 1
+                lowHealthAlpha = pulse * lowHealthPulseMaxAlpha;
+            }
+            else if (_currentHealth > 0)
+            {
+                // Normal low health vignette (gradual increase as health drops, but subtle)
+                float baseLowHealthAlpha = 1f - healthPercent;
+                lowHealthAlpha = Mathf.Clamp(baseLowHealthAlpha * 0.1f, 0f, 0.1f);
+            }
+
+            // damage hit flash (set to vignetteMaxAlpha in TakeDamage)
+            if (_targetAlpha > 0)
+            {
+                _targetAlpha = Mathf.MoveTowards(_targetAlpha, 0f, Time.deltaTime * vignetteFadeSpeed);
+            }
 
             float finalAlpha = Mathf.Max(_targetAlpha, lowHealthAlpha);
 
             Color c = damageVignette.color;
-            c.a = Mathf.Lerp(c.a, finalAlpha, Time.deltaTime * vignetteFadeSpeed);
+            // Always ensure red color
+            c.r = 1f; c.g = 0f; c.b = 0f;
+            
+            // Apply the alpha
+            c.a = finalAlpha;
             damageVignette.color = c;
-
-            if (_targetAlpha > lowHealthAlpha)
-                _targetAlpha = Mathf.Lerp(_targetAlpha, lowHealthAlpha, Time.deltaTime * vignetteFadeSpeed);
         }
 
         public void Heal(float amount)
