@@ -451,7 +451,7 @@ MonoBehaviour:
   reserveAmmo: 90
   fireRate: 0.1
   isAutomatic: 1
-  damage: 25
+  damage: 33
   range: 100
   reloadTime: 2.5
   reloadsOneByOne: 0
@@ -474,9 +474,9 @@ MonoBehaviour:
   shotPower: 350
   ejectPower: 150
   needsPump: 0
-  visualRecoilTranslation: {x: 0, y: 0.02, z: -0.08}
+  visualRecoilTranslation: {x: 0, y: 0.05, z: -0.08}
   visualRecoilRotation: {x: -3, y: 0.05, z: 0}
-  visualRecoilRandomHorizontal: 0.04
+  visualRecoilRandomHorizontal: 0.08
   visualRecoilSpringFrequency: 10
   visualRecoilSpringDamping: 0.4
 --- !u!1 &2651670557470964910

@@ -442,7 +442,7 @@ MonoBehaviour:
   needsPump: 0
   visualRecoilTranslation: {x: 0, y: 0.02, z: -0.05}
   visualRecoilRotation: {x: -3, y: 0, z: 0}
-  visualRecoilRandomHorizontal: 0.01
+  visualRecoilRandomHorizontal: 0.07
   visualRecoilSpringFrequency: 10
   visualRecoilSpringDamping: 0.4
   burstCount: 3

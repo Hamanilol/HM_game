@@ -145,11 +145,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pistol
   weaponName: Beretta PX4
   maxAmmo: 15
-  currentAmmo: 0
+  currentAmmo: 15
   reserveAmmo: 90
   fireRate: 0.1
   isAutomatic: 0
-  damage: 25
+  damage: 15
   range: 100
   reloadTime: 2.5
   reloadsOneByOne: 0
