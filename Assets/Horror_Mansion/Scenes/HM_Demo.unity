@@ -76905,6 +76905,10 @@ PrefabInstance:
       propertyPath: deathScreen
       value: 
       objectReference: {fileID: 1993773787}
+    - target: {fileID: 7191319431431347513, guid: 0119efff35616964490b9944488b5fe9, type: 3}
+      propertyPath: damageVignette
+      value: 
+      objectReference: {fileID: 942899657}
     - target: {fileID: 8114465471620770815, guid: 0119efff35616964490b9944488b5fe9, type: 3}
       propertyPath: spawner
       value: 

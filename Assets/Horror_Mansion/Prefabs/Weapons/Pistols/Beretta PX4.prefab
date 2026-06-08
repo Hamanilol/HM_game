@@ -162,11 +162,16 @@ MonoBehaviour:
   recoilPerShot: {x: -2, y: 0.5}
   muzzlePoint: {fileID: 2877335719998821806}
   muzzleFlashPrefab: {fileID: 0}
-  fireSound: {fileID: 0}
+  fireSound: {fileID: 8300000, guid: 055fde2561bbeb441b9ecb358aa6fe95, type: 3}
   reloadSound: {fileID: 0}
   pumpSound: {fileID: 0}
   weaponAnimator: {fileID: 0}
   needsPump: 0
+  visualRecoilTranslation: {x: 0, y: 0.02, z: -0.05}
+  visualRecoilRotation: {x: -3, y: 0, z: 0}
+  visualRecoilRandomHorizontal: 0.01
+  visualRecoilSpringFrequency: 10
+  visualRecoilSpringDamping: 0.4
 --- !u!1 &1710318766370853210
 GameObject:
   m_ObjectHideFlags: 0
@@ -536,7 +541,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9204347596338530127}
-  - component: {fileID: 3304220971427794866}
   m_Layer: 0
   m_Name: WeaponAlignment
   m_TagString: Untagged
@@ -559,20 +563,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 752686323466385708}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3304220971427794866
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6980901659123018420}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a4928b24e48f4964583565b6e2fa0b18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponAlignment
-  cameraTransform: {fileID: 0}
-  muzzlePoint: {fileID: 2877335719998821806}
 --- !u!1 &7214275528454487580
 GameObject:
   m_ObjectHideFlags: 0
