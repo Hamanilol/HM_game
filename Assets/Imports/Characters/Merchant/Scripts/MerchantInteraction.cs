@@ -9,6 +9,11 @@ namespace Abdulrahman.NPC
         public string animatorParameter = "IsPlayerClose";
         public GameObject interactionUI;
 
+        [Header("Store")]
+        [Tooltip("The StoreUI to open when the player presses E nearby. If left empty it will be found automatically.")]
+        public StoreUI storeUI;
+        public KeyCode interactKey = KeyCode.E;
+
         private Animator _animator;
         private Transform _player;
         private bool _isClose = false;
@@ -17,7 +22,9 @@ namespace Abdulrahman.NPC
         {
             _animator = GetComponent<Animator>();
             if (interactionUI != null) interactionUI.SetActive(false);
-            
+
+            if (storeUI == null) storeUI = FindFirstObjectByType<StoreUI>(FindObjectsInactive.Include);
+
             FindPlayer();
         }
 
@@ -46,14 +53,27 @@ namespace Abdulrahman.NPC
                 _animator.SetBool(animatorParameter, _isClose);
             }
 
+            bool storeOpen = storeUI != null && storeUI.storePanel != null && storeUI.storePanel.activeSelf;
+
             if (interactionUI != null)
             {
-                interactionUI.SetActive(_isClose);
+                interactionUI.SetActive(_isClose && !storeOpen);
             }
 
-            if (_isClose && Input.GetKeyDown(KeyCode.E))
+            if (_isClose && Input.GetKeyDown(interactKey))
             {
-                ShopManager.Instance.OpenShop();
+                if (storeUI != null)
+                {
+                    storeUI.Open();
+                }
+                else if (ShopManager.Instance != null)
+                {
+                    ShopManager.Instance.OpenShop();
+                }
+                else
+                {
+                    Debug.LogWarning("[MerchantInteraction] No StoreUI or ShopManager available to open.");
+                }
             }
         }
 

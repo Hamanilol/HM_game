@@ -2165,9 +2165,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
   characterSelectScene: CharacterSelect
+  singlePlayerScene: HM_Demo_SinglePlayer
   settingsMenu: {fileID: 1212249136}
   videoPlayer: {fileID: 1872414863}
   mainMenu: {fileID: 915629242}
+  background: {fileID: 1017955955}
   backgroundMusicSource: {fileID: 1882574532}
   sfxSource: {fileID: 1882574532}
   hoverSound: {fileID: 8300000, guid: 3059370436ccf3d4b85fbc681292159a, type: 3}

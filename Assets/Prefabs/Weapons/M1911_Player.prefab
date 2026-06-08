@@ -126,7 +126,7 @@ MonoBehaviour:
   recoilPerShot: {x: -2, y: 0.5}
   muzzlePoint: {fileID: 5157030894461831927}
   muzzleFlashPrefab: {fileID: 1782395880954752, guid: 3dd9cf2e209c504448f1c4c6835675cf, type: 3}
-  fireSound: {fileID: 0}
+  fireSound: {fileID: 8300000, guid: 055fde2561bbeb441b9ecb358aa6fe95, type: 3}
   reloadSound: {fileID: 0}
   pumpSound: {fileID: 0}
   weaponAnimator: {fileID: 6881164742809889519}
